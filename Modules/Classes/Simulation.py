@@ -268,7 +268,7 @@ class Trialset(object):
         if hasattr(fixedparams,'keys'):
             #convert free parms to dict
             params = model.params2dict(params)
-            for parmname in fixedparams.keys():
+            for parmname in list(fixedparams.keys()):
                 params[parmname] = fixedparams[parmname]
         #Get stimsteps, if it doesn't exist, compute and add as property
         if hasattr(self,'stimstep'):
@@ -305,7 +305,7 @@ class Trialset(object):
             if hasattr(trial['response'][0], "__len__"):
                 responseType = 2
                 #Identify if any axis needs wrapping
-                if not 'wrap_ax' in trial.keys():
+                if not 'wrap_ax' in list(trial.keys()):
                     #Legacy support. If trialset doesn't have wrap_ax, then no wrapping is required.
                     #This shouldn't really happen, but just in case
                     trial['wrap_ax'] = []
@@ -323,7 +323,7 @@ class Trialset(object):
             else:
                 responseType = 1
                 #Identify if any axis needs wrapping
-                if not 'wrap_ax' in trial.keys():
+                if not 'wrap_ax' in list(trial.keys()):
                     #Legacy support. If trialset doesn't have wrap_ax, then no wrapping is required.
                     trial['wrap_ax'] = np.array([None for i in range(len(trial['response']))])
                     wraps = [None]
@@ -539,7 +539,7 @@ def hillclimber(model_obj, trials_obj, options, fixedparams = None, inits = None
         print('\tMessage = ' + str(res.message))
         
         X = model_obj.params2dict(model_obj.clipper(res.x))
-        for k, v in X.items():
+        for k, v in list(X.items()):
             print('\t' + k + ' = ' + str(v) + ',')
             
         print('\tLogLike = ' + str(res.fun))    
@@ -576,7 +576,7 @@ def hillclimber_corr(model_obj, pptdata, tso, options, fixedparams = None, inits
     global fitLL
     global seedrng
     fitLL = False
-    execfile('Imports.py')
+    exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
     import Modules.Funcs as funcs
     # set initial params
     if inits is None:    
@@ -607,7 +607,7 @@ def hillclimber_corr(model_obj, pptdata, tso, options, fixedparams = None, inits
         print('\tMessage = ' + str(res.message))
         
         X = model_obj.params2dict(model_obj.clipper(res.x))
-        for k, v in X.items():
+        for k, v in list(X.items()):
             print('\t' + k + ' = ' + str(v) + ',')
             
         print('\tLogLike = ' + str(res.fun) )        
@@ -636,7 +636,7 @@ def _callback_fun_(xk):
         if fitLL:
             fit = trials_obj.loglike(xk,model_obj,seedrng = seedrng)                
         else:
-            execfile('Imports.py')
+            exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
             import Modules.Funcs as funcs
             fit = funcs.get_corr(xk,pptdata,tso,model_obj,print_on=False) #220618 hmm not entirely sure if this works but can try
         xk = model_obj.parmxform(xk, direction = -1)
