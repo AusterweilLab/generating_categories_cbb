@@ -1,6 +1,6 @@
 # this script adds the main 'generating_categories_cbb' directory to the path
 # enabling the user to import the Modules.
-# 
+#
 # It is assumed that this script is executed in a subdirectory of the
 # 'generating_categories_cbb' repository, and so it is simply a matter of
 # finding the correct outer directory.
@@ -14,7 +14,7 @@ def _add_modules_path():
 	splitted = os.path.split(os.getcwd())
 	while splitted[1] != 'generating_categories_cbb':
 		splitted = os.path.split(splitted[0])
-		
+
 		if splitted[0] == os.sep:
 			S = "generating_categories_cbb is not a parent directory. You are here:\n\n"
 			S+= os.getcwd()
@@ -22,7 +22,8 @@ def _add_modules_path():
 
 	# recombine and insert
 	mainpath = os.path.join(splitted[0], splitted[1])
-	sys.path.insert(0, mainpath) 
+	sys.path.insert(0, mainpath)
+	print("Added", "'\033[92m"+mainpath+"'\033[0m", "to system PATH.")
 
 
 if __name__ == "__main__":
