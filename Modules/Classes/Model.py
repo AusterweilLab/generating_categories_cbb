@@ -5,12 +5,10 @@ import numpy as np
 import Modules.Funcs as Funcs
 
 
-class Model(object):
+class Model(object, metaclass=abc.ABCMeta):
     """        
     Abstract base class. This is the starting point for all concrete models.
     """
-    
-    __metaclass__ = abc.ABCMeta
     num_features = 2 #hard code on first init, then update whenever trials come in
     @abc.abstractproperty
     def model(): pass
@@ -38,7 +36,7 @@ class Model(object):
         if fmt == list: 
             return params
         else: 
-            return dict(zip(cls.parameter_names, params))
+            return dict(list(zip(cls.parameter_names, params)))
 
     @classmethod
     def clipper(cls, params):
@@ -53,13 +51,13 @@ class Model(object):
         else: param_dict = dict(params)
 
         # clip dict
-        for k, rules in cls.parameter_rules.items():
+        for k, rules in list(cls.parameter_rules.items()):
             if rules is None: continue
             if not k in param_dict: continue
-            if 'min' in rules.keys():
+            if 'min' in list(rules.keys()):
                 if param_dict[k] < rules['min']:
                     param_dict[k] = rules['min']
-            if 'max' in rules.keys():
+            if 'max' in list(rules.keys()):
                 if param_dict[k] > rules['max']:
                     param_dict[k] = rules['max']
 
@@ -81,17 +79,17 @@ class Model(object):
                 param_dict = cls.params2dict(params)
             else: param_dict = dict(params)
 
-            for k, rules in cls.parameter_rules.items():
+            for k, rules in list(cls.parameter_rules.items()):
                 gotmin = False
                 gotmax = False
                 min = 0
                 max = 0
                 if rules is None:
                     continue
-                if 'min' in rules.keys():
+                if 'min' in list(rules.keys()):
                         gotmin = True
                         min = rules['min']
-                if 'max' in rules.keys():
+                if 'max' in list(rules.keys()):
                         gotmax = True
                         max = rules['max']
                 if gotmin and gotmax:
@@ -122,7 +120,7 @@ class Model(object):
             S = 'Not enough (or too many) parameters!\nRequired:'
             S += ''.join(['\n\t' + i  for i in cls.parameter_names])
             raise Exception(S)
-        return dict(zip(cls.parameter_names, params))
+        return dict(list(zip(cls.parameter_names, params)))
         
 
     @abc.abstractmethod
@@ -184,7 +182,7 @@ class Model(object):
         class attributes based on values.
         """
         for k in self.parameter_names:
-            if k not in self.params.keys():
+            if k not in list(self.params.keys()):
                 raise Exception("There is no '" + k + "' parameter!!!")
             else: 
                 setattr(self, k, self.params[k])
@@ -211,7 +209,7 @@ class Model(object):
             Raises exception if wts is not the right size.
         """
 
-        if 'wts' not in self.params.keys():
+        if 'wts' not in list(self.params.keys()):
             self.wts = np.ones(self.nfeatures) / self.nfeatures
             return
 
@@ -227,7 +225,7 @@ class Model(object):
         """
             Resets self.params given updated values.
         """
-        for k in self.params.keys():
+        for k in list(self.params.keys()):
             self.params[k] = getattr(self, k)
 
 
@@ -386,12 +384,11 @@ class Model(object):
         return density
 
 
-class Exemplar(Model):
+class Exemplar(Model, metaclass=abc.ABCMeta):
     """        
     Abstract base class for Exemplar models. Basically this is used to add 
     a function computing summed similarity.
     """
-    __metaclass__ = abc.ABCMeta
 
     def _sum_similarity(self, X, Y, 
         param = 1.0,    
@@ -426,12 +423,11 @@ class Exemplar(Model):
         similarity = similarity * float(param)
         return np.sum(similarity, axis = 1)
 
-class HierSamp(Model):
+class HierSamp(Model, metaclass=abc.ABCMeta):
     """        
     Abstract base class for hierarchical sampling/Bayesian models (e.g. ConjugateJK13, RepresentJK13). Basically this is used to add 
     a function computing wrapped densities for boundless features.
     """
-    __metaclass__ = abc.ABCMeta
 
     def get_musig(self, stimuli, category):
         # random response if there are no target members.
