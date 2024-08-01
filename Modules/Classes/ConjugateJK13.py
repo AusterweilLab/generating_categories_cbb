@@ -10,7 +10,7 @@ from Modules.Classes.Model import HierSamp
 class ConjugateJK13(HierSamp):
     """
     A conjugate version of the Jern & Kemp (2013) heirarchical sampling
-    Model. Categories are represented as multivariate normal, and the 
+    Model. Categories are represented as multivariate normal, and the
     domain covariance is inverse-wishart.
     """
 
@@ -38,11 +38,11 @@ class ConjugateJK13(HierSamp):
             np.random.uniform(0.01, 5.0), # domain_variance_bias
             np.random.uniform(0.1, 6.0) # determinism
         ]
-    
+
 
     def _update_(self):
         """
-        This model additionally requires setting of the domain 
+        This model additionally requires setting of the domain
         parameters and priors    on update.
         """
 
@@ -82,7 +82,7 @@ class ConjugateJK13(HierSamp):
             return np.ones(ncandidates) / float(ncandidates)
 
         mu,Sigma = self.get_musig(stimuli, category)
-                
+
         # get relative densities
         if np.isnan(Sigma).any() or np.isinf(Sigma).any():
             #target_dist = np.ones(mu.shape) * np.nan
@@ -93,13 +93,13 @@ class ConjugateJK13(HierSamp):
                 density = self._wrapped_density(target_dist,stimuli)
             else:
                 density = target_dist.pdf(stimuli)
-                
-        if task is 'generate': 
-            # NaN out known members - only for task=generate            
+
+        if task == 'generate':
+            # NaN out known members - only for task=generate
             known_members = Funcs.intersect2d(stimuli, self.categories[category])
             density[known_members] = np.nan
             ps = Funcs.softmax(density, theta = self.determinism)
-        elif task is 'assign' or task is 'error':
+        elif task == 'assign' or task == 'error':
             # get relative densities
             mu_flip, Sigma_flip = self.get_musig(stimuli,1-category)
             if np.isnan(Sigma_flip).any() or np.isinf(Sigma_flip).any():
@@ -117,12 +117,12 @@ class ConjugateJK13(HierSamp):
                 density_element = np.array([density[i],
                                             density_flip[i]])
                 ps_element = Funcs.softmax(density_element, theta = self.determinism)
-                ps = np.append(ps,ps_element[0])                        
+                ps = np.append(ps,ps_element[0])
         return ps
 
 
 
-        
+
 
 
 class RepresentJK13(HierSamp):
@@ -157,11 +157,11 @@ class RepresentJK13(HierSamp):
             np.random.uniform(0.01, 5.0), # domain_variance_bias
             np.random.uniform(0.1, 6.0) # determinism
         ]
-    
+
 
     def _update_(self):
         """
-        This model additionally requires setting of the domain 
+        This model additionally requires setting of the domain
         parameters and priors    on update.
         """
         # standard update procedure
@@ -169,7 +169,7 @@ class RepresentJK13(HierSamp):
 
         # infer domain Sigma
         self.Domain = np.array(self.prior_variance, copy=True)
-        for y in range(self.ncategories):            
+        for y in range(self.ncategories):
             #if self.nexemplars[y] < 2: continue
             #C = np.cov(self.categories[y], rowvar = False)
             (xbar,C) = self.catStats(y)
@@ -178,7 +178,7 @@ class RepresentJK13(HierSamp):
         # set prior mean.
         #If an axis is wrapped, however, set the prior mean to be center of the first populated category
         if self.wrap_ax is None:
-            self.category_prior_mean = np.zeros(self.nfeatures) 
+            self.category_prior_mean = np.zeros(self.nfeatures)
         else:
             self.category_prior_mean = xbar
         #Update num features for correct parm rules
@@ -201,7 +201,7 @@ class RepresentJK13(HierSamp):
         if seedrng:
             np.random.seed(234983) #some arbitrary seed value here
 
-        target_is_populated = any(self.assignments == category)                
+        target_is_populated = any(self.assignments == category)
         mu,Sigma = self.get_musig(stimuli, category)
         # get relative densities
         if np.isnan(Sigma).any() or np.isinf(Sigma).any():
@@ -210,8 +210,8 @@ class RepresentJK13(HierSamp):
         else:
             # #270418 Implementing representational draws
             target_dist_target = multivariate_normal(mean = mu, cov = Sigma)
-            if not self.wrap_ax is None:                
-                likelihood_target = self._wrapped_density(target_dist_target,stimuli)                
+            if not self.wrap_ax is None:
+                likelihood_target = self._wrapped_density(target_dist_target,stimuli)
             else:
                 likelihood_target = target_dist_target.pdf(stimuli)
 
@@ -219,7 +219,7 @@ class RepresentJK13(HierSamp):
             prior_dens = []
             #Get parameters for all alt categories (alternative hypothesis)
             for c_alt in range(self.ncategories):
-                if not c_alt == category: #Continue (pass) if c_alt is target category                    
+                if not c_alt == category: #Continue (pass) if c_alt is target category
                     mu_alt, Sigma_alt = self.get_musig(stimuli, c_alt)
                     target_dist_alt = multivariate_normal(mean = mu_alt, cov = Sigma_alt)
                     if not self.wrap_ax is None:
@@ -238,7 +238,7 @@ class RepresentJK13(HierSamp):
                 prior = Funcs.softmax(np.array(prior_dens), theta=1,toggle=False)
             else:
                 prior = [1]
-                
+
             denom = 0
             for ci in range(len(prior)):
                 if len(likelihood_alt)>0:
@@ -246,15 +246,15 @@ class RepresentJK13(HierSamp):
                 else:
                     #If for whatever reason there is no alternative category
                     denom = 1
-            
+
             density = np.log(likelihood_target/denom)
-        if task is 'generate': 
+        if task == 'generate':
             # NaN out known members - only for task=generate
             if target_is_populated:
                 known_members = Funcs.intersect2d(stimuli, self.categories[category])
-                density[known_members] = np.nan                                
-            ps = Funcs.softmax(density, theta = self.determinism)                
-        elif task is 'assign' or task is 'error':
+                density[known_members] = np.nan
+            ps = Funcs.softmax(density, theta = self.determinism)
+        elif task == 'assign' or task == 'error':
             # get relative densities
             if np.isnan(Sigma).any() or np.isinf(Sigma).any():
                 density_flip = np.ones(len(stimuli)) * np.nan
@@ -296,11 +296,11 @@ class NegatedSpace(HierSamp):
             np.random.uniform(0.1, 6.0), # determinism
             #np.random.uniform(0.001, 3.0) # unit_var
         ]
-    
+
 
     def _update_(self):
         """
-        This model additionally requires setting of the domain 
+        This model additionally requires setting of the domain
         parameters and priors    on update.
         """
 
@@ -350,7 +350,7 @@ class NegatedSpace(HierSamp):
             self.ncategories += 1
         for ci in range(self.ncategories):
             #Only add non-target categories
-            if not ci == category:                
+            if not ci == category:
                 mu,Sigma = self.catStats(ci)
                 if self.nexemplars[ci]<2:
                     Sigma = np.eye(self.num_features) * unit_var
@@ -369,14 +369,14 @@ class NegatedSpace(HierSamp):
                     else:
                         negation += target_dist.pdf(stimuli)
         density = -negation
-        if task is 'generate': 
+        if task == 'generate':
             # NaN out known members - only for task=generate
             if target_is_populated:
-                known_members = Funcs.intersect2d(stimuli, self.categories[category])            
+                known_members = Funcs.intersect2d(stimuli, self.categories[category])
                 density[known_members] = np.nan
             ps = Funcs.softmax(density, theta = self.determinism)
 
-        elif task is 'assign' or task is 'error':
+        elif task == 'assign' or task == 'error':
             raise Exception('Assignment and error not yet implemented for this model.')
             # # get relative densities
             # mu_flip, Sigma_flip = self.get_musig(stimuli,1-category)
@@ -395,14 +395,14 @@ class NegatedSpace(HierSamp):
             #     density_element = np.array([density[i],
             #                                 density_flip[i]])
             #     ps_element = Funcs.softmax(density_element, theta = self.determinism)
-            #     ps = np.append(ps,ps_element[0])                        
+            #     ps = np.append(ps,ps_element[0])
         return ps
 
 
 class NConjugateJK13(HierSamp):
     """
     A negated conjugate version of the Jern & Kemp (2013) heirarchical sampling
-    Model. Categories are represented as multivariate normal, and the 
+    Model. Categories are represented as multivariate normal, and the
     domain covariance is inverse-wishart.
     """
 
@@ -433,11 +433,11 @@ class NConjugateJK13(HierSamp):
             np.random.uniform(0.1, 6.0), # determinism
             np.random.uniform(0.01, 10.0) # negwt
         ]
-    
+
 
     def _update_(self):
         """
-        This model additionally requires setting of the domain 
+        This model additionally requires setting of the domain
         parameters and priors    on update.
         """
 
@@ -478,7 +478,7 @@ class NConjugateJK13(HierSamp):
             self.ncategories += 1
         for ci in range(self.ncategories):
             mu,Sigma = self.get_musig(stimuli, ci)
-            if ci == category:                
+            if ci == category:
                 # get relative densities
                 if not target_is_populated:
                     ncandidates = stimuli.shape[0]
@@ -502,15 +502,15 @@ class NConjugateJK13(HierSamp):
                         negation += self._wrapped_density(target_dist,stimuli)
                     else:
                         negation += target_dist.pdf(stimuli)
-                
+
         density = density + (negation * -self.negwt)
-        if task is 'generate': 
+        if task == 'generate':
             # NaN out known members - only for task=generate
             if target_is_populated:
                 known_members = Funcs.intersect2d(stimuli, self.categories[category])
                 density[known_members] = np.nan
             ps = Funcs.softmax(density, theta = self.determinism)
-        elif task is 'assign' or task is 'error':
+        elif task == 'assign' or task == 'error':
             # get relative densities
             mu_flip, Sigma_flip = self.get_musig(stimuli,1-category)
             if np.isnan(Sigma_flip).any() or np.isinf(Sigma_flip).any():
@@ -528,12 +528,12 @@ class NConjugateJK13(HierSamp):
                 density_element = np.array([density[i],
                                             density_flip[i]])
                 ps_element = Funcs.softmax(density_element, theta = self.determinism)
-                ps = np.append(ps,ps_element[0])                        
+                ps = np.append(ps,ps_element[0])
         return ps
 
 
 
-        
+
 
 
 class NRepresentJK13(HierSamp):
@@ -571,11 +571,11 @@ class NRepresentJK13(HierSamp):
             np.random.uniform(0.1, 6.0), # determinism
             np.random.uniform(0.01, 10.0) # negwt
         ]
-    
+
 
     def _update_(self):
         """
-        This model additionally requires setting of the domain 
+        This model additionally requires setting of the domain
         parameters and priors    on update.
         """
         # standard update procedure
@@ -583,7 +583,7 @@ class NRepresentJK13(HierSamp):
 
         # infer domain Sigma
         self.Domain = np.array(self.prior_variance, copy=True)
-        for y in range(self.ncategories):            
+        for y in range(self.ncategories):
             #if self.nexemplars[y] < 2: continue
             #C = np.cov(self.categories[y], rowvar = False)
             (xbar,C) = self.catStats(y)
@@ -592,7 +592,7 @@ class NRepresentJK13(HierSamp):
         # set prior mean.
         #If an axis is wrapped, however, set the prior mean to be center of the first populated category
         if self.wrap_ax is None:
-            self.category_prior_mean = np.zeros(self.nfeatures) 
+            self.category_prior_mean = np.zeros(self.nfeatures)
         else:
             self.category_prior_mean = xbar
         #Update num features for correct parm rules
@@ -637,7 +637,7 @@ class NRepresentJK13(HierSamp):
                         negation += self._wrapped_density(target_dist,stimuli)
                     else:
                         negation += target_dist.pdf(stimuli)
-                
+
         # get relative densities
         if np.isnan(Sigma).any() or np.isinf(Sigma).any():
             #target_dist = np.ones(mu.shape) * np.nan
@@ -654,7 +654,7 @@ class NRepresentJK13(HierSamp):
             prior_dens = []
             #Get parameters for all alt categories (alternative hypothesis)
             for c_alt in range(self.ncategories):
-                if not c_alt == category: #Continue (pass) if c_alt is target category                    
+                if not c_alt == category: #Continue (pass) if c_alt is target category
                     mu_alt, Sigma_alt = self.get_musig(stimuli, c_alt)
                     target_dist_alt = multivariate_normal(mean = mu_alt, cov = Sigma_alt)
                     if not self.wrap_ax is None:
@@ -673,7 +673,7 @@ class NRepresentJK13(HierSamp):
                 prior = Funcs.softmax(np.array(prior_dens), theta=1,toggle=False)
             else:
                 prior = [1]
-                
+
             denom = 0
             for ci in range(len(prior)):
                 if len(likelihood_alt)>0:
@@ -681,17 +681,17 @@ class NRepresentJK13(HierSamp):
                 else:
                     #If for whatever reason there is no alternative category
                     denom = 1
-            
+
             density = np.log(likelihood_target/denom)
-            
+
         density = density + (negation * -self.negwt)
-        if task is 'generate': 
+        if task == 'generate':
             # NaN out known members - only for task=generate
             if target_is_populated:
                 known_members = Funcs.intersect2d(stimuli, self.categories[category])
-                density[known_members] = np.nan                                
-            ps = Funcs.softmax(density, theta = self.determinism)                
-        elif task is 'assign' or task is 'error':
+                density[known_members] = np.nan
+            ps = Funcs.softmax(density, theta = self.determinism)
+        elif task == 'assign' or task == 'error':
             # get relative densities
             if np.isnan(Sigma).any() or np.isinf(Sigma).any():
                 density_flip = np.ones(len(stimuli)) * np.nan
@@ -705,4 +705,3 @@ class NRepresentJK13(HierSamp):
                 ps = np.append(ps,ps_element[0])
         #return (ps,likelihood_alt,likelihood_target,Sigma,Sigma_alt)
         return ps
-

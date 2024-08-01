@@ -6,9 +6,9 @@ import os
 def compile_file(filename):
 	with open(filename, encoding='utf-8') as f:
 		return compile(f.read(), filename, 'exec')
-	
+
 cur_dir = 'Experiments/middle_bottom/modeling/'
-exec(compile_file(os.path.join(cur_dir,'Imports.py')))
+exec(compile_file('Imports.py'))
 
 from Modules.Classes import Packer
 import Modules.Funcs as funcs
@@ -38,7 +38,7 @@ f, ax = plt.subplots(1,3, figsize = (7.5, 1.5))
 
 prefix = ['(a)','(b)','(c)']
 for i, k in enumerate(['Contrast Influence', 'Target Influence', 'Combination']):
-    m = prob_spaces[k] 
+    m = prob_spaces[k]
     h = ax[i]
 
     ps = m.get_generation_ps(space,1)
@@ -53,11 +53,11 @@ for i, k in enumerate(['Contrast Influence', 'Target Influence', 'Combination'])
     tradeoffstr = str(m.theta_cntrst)
     if tradeoffstr in ['0.0', '1.0']:
         tradeoffstr = tradeoffstr[0]
-    xlab  = '$\{'
+    xlab  = r"$\{"
     xlab += '\\alpha = ' + str(int(c)) + ','
     xlab += '\\theta_c = ' + tradeoffstr  + ','
     xlab += '\\theta_t = ' + str(int(theta))
-    xlab += '\}$'
+    xlab += r"\}$"
     h.set_xlabel(xlab)
 
 
@@ -68,5 +68,4 @@ f.colorbar(im, cax=cbar, ticks = [0, np.max(g)])
 cbar.set_yticklabels(['Lowest\nProbability', 'Greatest\nProbability'])
 cbar.tick_params(length = 0)
 
-
-f.savefig(os.path.join(cur_dir,'packer-examples.pdf'), bbox_inches='tight', transparent=True)
+f.savefig('packer-examples.pdf', bbox_inches='tight', transparent=True)
