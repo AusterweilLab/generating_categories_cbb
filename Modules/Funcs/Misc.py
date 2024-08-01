@@ -213,7 +213,9 @@ def gradientroll(G, op):
 
 def pdist(X, Y, w = np.array([]), wrap_ax = None, ax_range = 2, ax_step = .25):
     """
-    Calculate weighted city-block distance between two ND arrays
+    Calculate weighted city-block distance between two ND arrays.
+
+    Equivalent to `pdist_gen(p=1, ...)`.
 
     Parameters
     ----------
@@ -239,42 +241,15 @@ Examples
     >>> pdist(X,Y)
     array([[ 0.5  1. ]
            [ 1.   0.5]])
+    # both x- and y-axis have a 0.5 weight
     >>> w = np.array([0, 1])
     >>> pdist(X,Y,w)
     array([[0 1]
            [1 0]])
+    # now x-axis (column 0) has 0 weight, y-axis (column 1) has 1 weight
     """
-
-    # get info
-    nX, nY, ncols =  X.shape[0], Y.shape[0], X.shape[1]
-
-    # uniform weights if not otherwise provided
-    if not w.size:
-        w = np.array([1.0/ncols for i in range(ncols)])
-
-    # tile to common sizes
-    X = np.tile(X[:,:,None], (1,1,nY) )
-    Y = np.tile(np.swapaxes(Y[:,:,None],0,2),(nX,1,1))
-    w = w[None,:,None]
-    # compute distance
-    difference = X - Y
-    #If any axis is boundless, take its minimum of either d or max-d
-    if not wrap_ax is None:
-        if not type(wrap_ax) is list:
-            wrap_ax = [wrap_ax]
-        #print('Old diff: {}'.format(difference[:,1]))
-        for ax in wrap_ax:
-            #Ensure ax is int of some sortif not None
-            if not ax is None:
-                ax = int(ax)
-                diff_ax = np.abs(difference[:,ax].copy())
-                diff_alt = ax_range-diff_ax + ax_step
-                diff_min = np.min([diff_ax,diff_alt],axis=0)
-                difference[:,ax] = diff_min
-        #print('New diff: {}'.format(difference[:,ax]))
-
-    weighted_distance = np.multiply(difference, w)
-    return np.sum( np.abs(weighted_distance), axis = 1 )
+    p = 1
+    return pdist_gen(X, Y, w, p, wrap_ax, ax_range, ax_step)
 
 def pdist_gen(X, Y, w = np.array([]), p = 2,wrap_ax = None,ax_range = 2,ax_step = .25):
     """
@@ -333,14 +308,16 @@ def pdist_gen(X, Y, w = np.array([]), p = 2,wrap_ax = None,ax_range = 2,ax_step 
             wrap_ax = [wrap_ax]
         for ax in wrap_ax:
             #Ensure ax is int of some sort
-            ax = int(ax)
-            diff_ax = np.abs(difference[:,ax].copy())
-            diff_alt = ax_range-diff_ax + ax_step
-            diff_min = np.min([diff_ax,diff_alt],axis=0)
-            difference[:,ax] = diff_min
+            if not ax is None:
+                ax = int(ax)
+                diff_ax = np.abs(difference[:,ax].copy())
+                diff_alt = ax_range-diff_ax + ax_step
+                diff_min = np.min([diff_ax,diff_alt],axis=0)
+                difference[:,ax] = diff_min
 
     weighted_distance = np.multiply(difference, w)
-    return np.power(np.sum( weighted_distance**p, axis = 1 ),1./p) #Euclidean, so sqrt the summed sq distance
+    # Kesong summer 2024 note: BUGFIX: use `np.abs()` to avoid distance miscalculation
+    return np.power(np.sum( np.abs(weighted_distance)**p, axis = 1 ),1./p) #Euclidean, so sqrt the summed sq distance
 
 def aic(loglike,nparms):
         aic = 2.0*nparms - 2.0* (-1.0 * loglike)
@@ -656,7 +633,7 @@ def getCatassignID(inID,source='analysis',fetch='old'):
         data = pickle.load(f)
     if isinstance(inID,int):
         out = data.loc[data[source] == inID][fetch].item()
-    elif inID is 'all':
+    elif inID == 'all':
         out = list(data[source])
     elif hasattr(inID,'__len__'):
         out = []
@@ -785,7 +762,7 @@ def get_initials(input,num_letters = 1,include_delim = True):
     '''
     import re
     if include_delim:
-        delim = re.findall('[\s+_]',input)
+        delim = re.findall(r"[\s+_]",input)
         delim += [''] #last delimiter is blank
         output = "".join(item[0:num_letters]+delim[i] for i,item in enumerate(re.findall("[a-zA-Z0-9]+", input)))
     else:

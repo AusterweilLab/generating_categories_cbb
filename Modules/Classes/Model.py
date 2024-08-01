@@ -1,25 +1,29 @@
-import abc
+from abc import ABCMeta, abstractmethod
 import numpy as np
 
 # imports from module
 import Modules.Funcs as Funcs
 
 
-class Model(object, metaclass=abc.ABCMeta):
-    """        
+class Model(object, metaclass=ABCMeta):
+    """
     Abstract base class. This is the starting point for all concrete models.
     """
     num_features = 2 #hard code on first init, then update whenever trials come in
-    @abc.abstractproperty
+
+    @property
+    @abstractmethod
     def model(): pass
 
-    @abc.abstractproperty
+    @property
+    @abstractmethod
     def parameter_names(): pass
 
-    @abc.abstractproperty
+    @property
+    @abstractmethod
     def parameter_rules(): pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def _make_rvs(): pass
 
     @classmethod
@@ -32,10 +36,10 @@ class Model(object, metaclass=abc.ABCMeta):
 
         if fmt not in [dict, list]:
             raise Exception('fmt must be dict or list.')
-        
-        if fmt == list: 
+
+        if fmt == list:
             return params
-        else: 
+        else:
             return dict(list(zip(cls.parameter_names, params)))
 
     @classmethod
@@ -64,14 +68,13 @@ class Model(object, metaclass=abc.ABCMeta):
         # return in original format
         if not isinstance(params, dict):
             return [param_dict[k] for k in cls.parameter_names]
-        else: 
+        else:
             return param_dict
-
 
     @classmethod
     def parmxform(cls, params, direction = 1):
         """
-        Transform a set of parameters according to model rules.                
+        Transform a set of parameters according to model rules.
         """
         toggle = True #make it a little easier to switch this on or off
         if toggle:
@@ -102,17 +105,16 @@ class Model(object, metaclass=abc.ABCMeta):
             # return in original format
             if not isinstance(params, dict):
                 return [param_dict[k] for k in cls.parameter_names]
-            else: 
+            else:
                 return param_dict
         else:
             return params
-
 
     @classmethod
     def params2dict(cls, params):
         """
         Convert list parameters to dict, assuming order set by
-        parameter_names. Raises exception if there are not 
+        parameter_names. Raises exception if there are not
         enough params (or too many).
         """
 
@@ -121,30 +123,29 @@ class Model(object, metaclass=abc.ABCMeta):
             S += ''.join(['\n\t' + i  for i in cls.parameter_names])
             raise Exception(S)
         return dict(list(zip(cls.parameter_names, params)))
-        
 
-    @abc.abstractmethod
+    @abstractmethod
     def get_generation_ps(self, stimuli, category, task='generate',seedrng=False): pass
 
     def __init__(self, categories, params, stimrange=[{'min':-1,'max':1},{'min':-1,'max':1}],stimstep = [.25,.25],wrap_ax=None):
         """
         Initialize the model. "categories" should be a list of numpy
-        arrays with the same number of columns (features). Items in 
+        arrays with the same number of columns (features). Items in
         "categories" can have unequal number of rows (examples).
-                
+
         'params' is a dict containing all model parameters. 'params'
-        should contain an entry for each of the items defined by the 
+        should contain an entry for each of the items defined by the
         'parameter_names' attribute of the concrete class
 
         'stimrange' is optional, and should ideally be fed into the model from
         the stimrange attribute of a constructed Trialset object. It should
         be a list with length = nfeatures, each element of the list describing
         the min and max of that feature.
-        
+
         'stimstep' is also option and is the increment of each discrete unit on each feature.
-                
+
         """
-        
+
         # force params to dict if it is not one
         if not isinstance(params, dict):
             params = self.params2dict(params)
@@ -159,32 +160,31 @@ class Model(object, metaclass=abc.ABCMeta):
         self.stimrange = stimrange
         self.wrap_ax = wrap_ax
         self.stimstep = stimstep
-        
+
         # setup functions
         self._param_handler_()
         self._wrap_ax_handler_()
         self._wts_handler_()
         self._update_()
 
-
     def __str__(self):
-            S = self.model + ' Model. Current state:' 
+            S = self.model + ' Model. Current state:'
             for k in self.parameter_names:
                 S += '\n\t' + k + ' = ' + str(getattr(self, k))
             for j in range(self.ncategories):
-                S += '\n\t' + 'Category ' +  str(j) + ': ' 
+                S += '\n\t' + 'Category ' +  str(j) + ': '
                 S += str(self.nexemplars[j]) + ' examples.'
             return S + '\n'
 
     def _param_handler_(self):
-        """ 
+        """
         Ensures all the right parameters are in place, and creates
         class attributes based on values.
         """
         for k in self.parameter_names:
             if k not in list(self.params.keys()):
                 raise Exception("There is no '" + k + "' parameter!!!")
-            else: 
+            else:
                 setattr(self, k, self.params[k])
 
     def _wrap_ax_handler_(self):
@@ -202,7 +202,7 @@ class Model(object, metaclass=abc.ABCMeta):
             for wi,wa in enumerate(self.wrap_ax):
                 if not type(wa) == int and not wa is None:
                     self.wrap_ax[wi] = int(wa)
-                    
+
     def _wts_handler_(self):
         """
             Sets feature weight parameters for models.
@@ -220,7 +220,6 @@ class Model(object, metaclass=abc.ABCMeta):
         self.wts = wts / float(np.sum(wts))
         self.params['wts'] = self.wts
 
-
     def _reset_param_dict_(self):
         """
             Resets self.params given updated values.
@@ -228,10 +227,9 @@ class Model(object, metaclass=abc.ABCMeta):
         for k in list(self.params.keys()):
             self.params[k] = getattr(self, k)
 
-
     def _update_(self):
         """
-        Generate descriptives about the known categories. 
+        Generate descriptives about the known categories.
         The fields defined below change when items are generated or forgotten,
         so this function is called whenever there is a change to model memory.
         """
@@ -243,17 +241,15 @@ class Model(object, metaclass=abc.ABCMeta):
             self.assignments += [i] * self.nexemplars[i]
         self.assignments = np.array(self.assignments)
 
-
     def forget_category(self, category):
         """ Delete an category from the model's memory """
         self.categories.pop(category)
         self._update_()
-        
 
     def simulate_generation(self, stimuli, category, nexemplars = None):
         """
         Simulate the generation of n-exemplars, sourced from stimuli, into a category.
-        The resulting category will be added to the model's memory, and the identity 
+        The resulting category will be added to the model's memory, and the identity
         of the generated items will be returned.
         """
 
@@ -277,28 +273,30 @@ class Model(object, metaclass=abc.ABCMeta):
             if num != None:
                 generated_examples.append(num)
                 self.categories[category] = np.concatenate(
-                    [self.categories[category], values], 
-                    axis = 0)                                
+                    [self.categories[category], values],
+                    axis = 0)
 
             # update knowledge
             self._update_()
 
         return generated_examples
-    
+
     def catStats(self,category):
-        # Get empirical mean and cov
+        """
+        Get empirical mean and cov
+        """
         wrap_ax = self.wrap_ax
         n = self.nexemplars[category]
         if not wrap_ax is None:
             if len(wrap_ax)>1:
                 raise Exception('Models cannot handle multiple wrapped axes yet.')
-            
+
             wrap_ax = int(wrap_ax[0])
             ax_range = self.stimrange[0]['max'] - self.stimrange[0]['min']
             ax_step = self.stimstep[0]
             cat = self.categories[category].copy()
             stim_range = np.max(cat[:,wrap_ax]) - np.min(cat[:,wrap_ax])
-            if stim_range>(ax_range/2):                    
+            if stim_range>(ax_range/2):
                 #Stimuli outside half the range get adjusted up to the first wrap
                 new_exm = cat[cat[:,wrap_ax]>=0,:]
                 shift_exm = cat[cat[:,wrap_ax]<0,:]
@@ -311,30 +309,29 @@ class Model(object, metaclass=abc.ABCMeta):
             else:
                 new_exm = cat
                 xbar = np.mean(cat, axis=0)
-        else:                                                        
+        else:
             xbar = np.mean(self.categories[category], axis = 0)
             new_exm = self.categories[category]
-            
+
         #Now deal with sigma
         if n < 2:
             C = np.zeros((self.nfeatures, self.nfeatures))
         else:
-            C = np.cov(new_exm, rowvar = False)                
+            C = np.cov(new_exm, rowvar = False)
 
         return (xbar,C)
-    
 
     def _wrapped_density(self, target_dist, stimuli,
                          density_ratio_cap = 1e5,
                          maxit = 50):
-        """ 
-        Function to compute the density on a wrapped space along some axis (like on the surfance of a torus, sphere, cylinder). 
+        """
+        Function to compute the density on a wrapped space along some axis (like on the surfance of a torus, sphere, cylinder).
         Only works along one axis at a time for now, though.
 
         Wrapping stops after the minimum density in one direction is smaller than the maximum density by the ratio
         defined in density_ratio_cap, or after maxit iterations.
 
-        """                                                             
+        """
         wrap_ax = self.wrap_ax
         density = target_dist.pdf(stimuli) #Base density
         if not type(wrap_ax) is list:
@@ -384,26 +381,26 @@ class Model(object, metaclass=abc.ABCMeta):
         return density
 
 
-class Exemplar(Model, metaclass=abc.ABCMeta):
-    """        
-    Abstract base class for Exemplar models. Basically this is used to add 
+class Exemplar(Model, metaclass=ABCMeta):
+    """
+    Abstract base class for Exemplar models. Basically this is used to add
     a function computing summed similarity.
     """
 
-    def _sum_similarity(self, X, Y, 
-        param = 1.0,    
-        wts  = None, 
+    def _sum_similarity(self, X, Y,
+        param = 1.0,
+        wts  = None,
         c = None,
         p = 1):
-        """ 
-        function to compute summed similarity along rows of 
-        X across all items in Y. Resulting array will have one element 
+        """
+        function to compute summed similarity along rows of
+        X across all items in Y. Resulting array will have one element
         per row of X.
 
         the "param" argument acts as a multiplier for similarities prior to summation
         "c" and "wts" can be arbitrary if supplied, or based on the model attribute if not
 
-        p indicates the p-norm for calculating distance in pdist. If p == 1, that's city-block distance. 
+        p indicates the p-norm for calculating distance in pdist. If p == 1, that's city-block distance.
         p == 2 indicates Euclidean distance. But really p can take any real positive.
 
         """
@@ -415,17 +412,14 @@ class Exemplar(Model, metaclass=abc.ABCMeta):
         ax_step = self.stimstep[0]
         if wts is None: wts = self.wts
         if c is None: c = self.specificity
-        if p == 1:
-            distance   = Funcs.pdist(np.atleast_2d(X), np.atleast_2d(Y), w = wts, wrap_ax = self.wrap_ax, ax_range = ax_range, ax_step=ax_step)
-        else:
-            distance   = Funcs.pdist_gen(np.atleast_2d(X), np.atleast_2d(Y), w = wts, p = p, wrap_ax = self.wrap_ax, ax_range = ax_range, ax_step = ax_step)
+        distance   = Funcs.pdist_gen(np.atleast_2d(X), np.atleast_2d(Y), w = wts, p = p, wrap_ax = self.wrap_ax, ax_range = ax_range, ax_step = ax_step)
         similarity = np.exp(-float(c) * distance)
         similarity = similarity * float(param)
         return np.sum(similarity, axis = 1)
 
-class HierSamp(Model, metaclass=abc.ABCMeta):
-    """        
-    Abstract base class for hierarchical sampling/Bayesian models (e.g. ConjugateJK13, RepresentJK13). Basically this is used to add 
+class HierSamp(Model, metaclass=ABCMeta):
+    """
+    Abstract base class for hierarchical sampling/Bayesian models (e.g. ConjugateJK13, RepresentJK13). Basically this is used to add
     a function computing wrapped densities for boundless features.
     """
 
@@ -434,7 +428,7 @@ class HierSamp(Model, metaclass=abc.ABCMeta):
         target_is_populated = any(self.assignments == category)
         if not target_is_populated:
             mu = []
-            #randomly sample mu from uniform                        
+            #randomly sample mu from uniform
             # for nf in range(self.nfeatures):
             #     mu += [np.random.uniform(self.stimrange[nf]['min'],
             #                              self.stimrange[nf]['max'])]
@@ -445,7 +439,7 @@ class HierSamp(Model, metaclass=abc.ABCMeta):
             Sigma = self.Domain * self.category_variance_bias
         else:
             n = self.nexemplars[category]
-            (xbar,C) = self.catStats(category)            
+            (xbar,C) = self.catStats(category)
             # compute mu for target category
             mu =  self.category_mean_bias * self.category_prior_mean
             mu += n * xbar
@@ -457,4 +451,3 @@ class HierSamp(Model, metaclass=abc.ABCMeta):
             Sigma += self.Domain * self.category_variance_bias + C
             Sigma /= self.category_variance_bias + n
         return (mu,Sigma)
-
