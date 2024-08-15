@@ -6,10 +6,10 @@ import scipy.stats
 import sqlite3
 import os,sys
 
-os.chdir(sys.path[0])
-exec(open('Imports.py').read())
+# os.chdir(sys.path[0])
+exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
 
-#TODO: import of local files in JK13 needs to be fixed 
+#TODO: import of local files in JK13 needs to be fixed
 import Modules.Funcs as funcs
 from JK13 import JK13, JKFuncs
 import numpy as np
@@ -31,16 +31,16 @@ checkregularity = []
 mode_prop = []
 for (i, c), rows in generation.groupby(['participant','condition']):
     idx = (training.participant == i) & (training.condition == c)
-    As = JKFuncs.dummycode_colors(training.loc[idx].Hue.as_matrix(), hues=hues)
-    Bs = JKFuncs.dummycode_colors(rows.Hue.as_matrix(), hues=hues)
+    As = JKFuncs.dummycode_colors(training.loc[idx].Hue.values, hues=hues)
+    Bs = JKFuncs.dummycode_colors(rows.Hue.values, hues=hues)
     nBs = float(len(Bs))
     if all(Bs[0]==Bs):
-        checkregularity += [True]        
+        checkregularity += [True]
     else:
         checkregularity += [False]
-        
+
     mode_prop += [scipy.stats.mode(Bs)[1]/nBs]
-    
+
     # num_distinct = np.sum(np.in1d(Bs,As)==1)
     # shared_hues[c] = np.append(shared_hues[c],num_distinct)
 
@@ -49,6 +49,6 @@ mode_mean = sum(mode_prop)/len(mode_prop)
 
 print('Total number of generated categories: {}'.format(len(mode_prop)))
 print('Generated categories with complete regularity (all exemplars of same hue): {}({})'.format(sum(checkregularity),regularity_prop))
-print('Mean regularity (mean proportion of category with modal hue): {}'.format(mode_mean[0]))
+print('Mean regularity (mean proportion of category with modal hue): {}'.format(mode_mean))
 print('Mean distance between trained and generated category: {}'.format(distances.Between.mean()))
 print('Mean distance within generated category: {}'.format(distances.Within.mean()))

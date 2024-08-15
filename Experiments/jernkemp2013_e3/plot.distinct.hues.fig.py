@@ -15,7 +15,8 @@ def compile_file(filename):
 	with open(filename, encoding='utf-8') as f:
 		return compile(f.read(), filename, 'exec')
 
-cur_dir = 'Experiments/jernkemp2013_e3'
+# cur_dir = 'Experiments/jernkemp2013_e3'
+cur_dir = ''
 
 exec(compile_file(os.path.join(cur_dir,'Imports.py')))
 
@@ -97,5 +98,3 @@ fh.savefig(fname, bbox_inches = 'tight', pad_inches=0.0)
 
 #path = '../../Manuscripts/cog-psych/figs/jk13-huecontrast.pgf'
 #funcs.save_as_pgf(fh, path)
-
-		
