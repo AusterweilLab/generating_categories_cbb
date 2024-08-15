@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 #set wd to where this program expects
 os.chdir(sys.path[0])
 
-exec(open('Imports.py').read())
+exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
 
 #execfile('Imports.py')
 import Modules.Funcs as funcs
@@ -27,7 +27,7 @@ f, ax = plt.subplots(1, 4, figsize=(7.4, 1.5))
 for i, k  in enumerate(list(alphas)):
 	h = ax[i+1]
 	lab = panel_labs[i+1]
-	funcs.plotclasses(h, stimuli, alphas[k], [])		
+	funcs.plotclasses(h, stimuli, alphas[k], [])
 
 	h.axis(np.array([-1, 1, -1, 1])*1.25)
 	# h.text(-1.1, 1.1, k, ha = 'left', va = 'top')
