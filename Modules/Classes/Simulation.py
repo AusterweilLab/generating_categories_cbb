@@ -322,7 +322,9 @@ class Trialset(object):
                     if wrap[0] is None:
                         wraps = [None]
                     else:
-                        wraps = np.unique(subwraps)
+                        # kesong: how to handle [1, None]?
+                        # assuming dropping all None objects
+                        wraps = np.unique(subwraps[subwraps != None])
             else:
                 responseType = 1
                 #Identify if any axis needs wrapping

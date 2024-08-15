@@ -4,7 +4,7 @@ import pandas as pd
 import sqlite3
 import pickle
 
-execfile('Imports.py')
+exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
 from Modules.Classes import Simulation
 
 pd.set_option('display.width', 200, 'display.precision', 2)
@@ -26,15 +26,16 @@ with sqlite3.connect(dbpath) as con:
     participants = pd.read_sql_query("SELECT * from participants", con)
     generation = pd.read_sql_query("SELECT * from generation", con)
     alphas = pd.read_sql_query("SELECT * from alphas", con)
-    stimuli = pd.read_sql_query("SELECT * from stimuli", con).as_matrix()
+    stimuli = pd.read_sql_query("SELECT * from stimuli", con).values
 
 # create categories mapping
 mapping = pd.DataFrame(columns = ['condition', 'categories'])
 for i in alphas.columns:
-    As = alphas[i].as_matrix().flatten()
-    mapping = mapping.append(
-        dict(condition = i, categories =[As]),
-        ignore_index = True
+    As = alphas[i].values.flatten()
+    mapping = pd.concat([
+            mapping,
+            pd.DataFrame([dict(condition = i, categories =[As])])
+        ],ignore_index = True
     )
 
 # merge categories into generation
