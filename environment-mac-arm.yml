@@ -1,0 +1,12 @@
+name: gcm1
+channels:
+  - defaults
+dependencies:
+  - numpy
+  - pandas
+  - scipy
+  - seaborn
+  - statsmodels
+  - matplotlib
+  - conda-forge::pickle-compat
+prefix: /Users/kesong/miniconda3/envs/gcm1

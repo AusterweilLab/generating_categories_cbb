@@ -19,7 +19,8 @@ def compile_file(filename):
 	with open(filename, encoding='utf-8') as f:
 		return compile(f.read(), filename, 'exec')
 
-cur_dir = 'Experiments/multiexpt_modeling/'
+# cur_dir = 'Experiments/multiexpt_modeling/'
+cur_dir = ''
 
 exec(compile_file(os.path.join(cur_dir,'Imports.py')))
 
@@ -93,15 +94,15 @@ with open(os.path.join(cur_dir,"pickles/chtc_gs_best_params_{}".format(src)), "r
 
 #Rebuild it into a smaller dict
 best_params = dict()
-for modelname in best_params_t.keys():    
+for modelname in best_params_t.keys():
     best_params[modelname] = dict()
     for i,parmname in enumerate(best_params_t[modelname]['parmnames']):
         parmval = best_params_t[modelname]['bestparmsll']
         best_params[modelname][parmname] = parmval[i]
 
 name_2_object = {
-    'PACKER': Packer, 
-    'Copy and Tweak': CopyTweak, 
+    'PACKER': Packer,
+    'Copy and Tweak': CopyTweak,
     'Hierarchical Sampling': ConjugateJK13,
     'Hierarchical Sampling With Representativeness': RepresentJK13,
     #'Copy and Tweak Rep': CopyTweakRep
@@ -135,10 +136,10 @@ for model_name, model_obj in name_2_object.items():
             params['wts'] = np.array([0.5, 0.5])
 
         # assume no baselinesim
-        params['baselinesim'] = 0        
+        params['baselinesim'] = 0
         # simulate
         model = model_obj([As], params,funcs.getrange(stimuli))
-        for j in range(N_SAMPLES):   
+        for j in range(N_SAMPLES):
             nums = model.simulate_generation(stimuli, 1, nexemplars = 4)
             model.forget_category(1)
 
@@ -150,11 +151,13 @@ for model_name, model_obj in name_2_object.items():
             numgen = len(nums)
             rows = dict(condition = [pcond] *numgen, stimulus = nums)
             rows[STAT_OF_INTEREST] = [all_stats[STAT_OF_INTEREST]]*numgen
-            
-            model_data = model_data.append(pd.DataFrame(rows), ignore_index = True)
+
+            # model_data = model_data.append(pd.DataFrame(rows), ignore_index = True)
+            model_data = pd.concat([model_data, pd.DataFrame(rows)], ignore_index = True)
+
 
         print('\t' + str(i))
-        
+
     # aggregate over simulations, add to all data
     model_data = model_data.groupby(['condition','stimulus'])[STAT_OF_INTEREST]
     model_data = model_data.agg(['mean', 'size'])
@@ -166,7 +169,7 @@ for model_name, model_obj in name_2_object.items():
 f, ax = plt.subplots(len(row_order),len(name_2_object)+1,figsize = (10, 10))
 for rownum, c in enumerate(row_order):
     A = stimuli[alphas[c],:]
-    
+
     for colnum, lab, in enumerate(col_order):
         data = all_data[lab]
         h = ax[rownum][colnum]
@@ -174,7 +177,7 @@ for rownum, c in enumerate(row_order):
 
         # get x/y pos of examples
         x, y = stimuli[:,0], stimuli[:,1]
-    
+
         # compute color value of each example
         vals = np.zeros(stimuli.shape[0])
         for i, row in df.groupby('stimulus'):
@@ -188,7 +191,7 @@ for rownum, c in enumerate(row_order):
         g = funcs.gradientroll(vals,'roll')[:,:,0]
         g = gaussian_filter(g, SMOOTHING_PARAM)
         vals = funcs.gradientroll(g,'unroll')
-        
+
         im = funcs.plotgradient(h, g, A, [], clim = STAT_LIMS, cmap = 'PuOr')
 
         # axis labeling
@@ -201,12 +204,12 @@ for rownum, c in enumerate(row_order):
         # experiment 1 and 2 markers
         if e1e2mark:
             if rownum == 1 and colnum == 0:
-                h.text(-3.5, np.mean(h.get_ylim()), 'Experiment 1', 
+                h.text(-3.5, np.mean(h.get_ylim()), 'Experiment 1',
                     ha = 'center', va = 'center', rotation = 90, fontsize = fontsettings['fontsize'] + 1)
                 h.plot([-2.7,-2.7],[-9,17],'-', color='gray', linewidth = 1, clip_on=False)
 
             if rownum == 3 and colnum == 0:
-                h.text(-3.5, -0.5, 'Experiment 2', 
+                h.text(-3.5, -0.5, 'Experiment 2',
                     ha = 'center', va = 'center', rotation = 90, fontsize = fontsettings['fontsize'] + 1)
                 h.plot([-2.7,-2.7],[-9,8],'-', color='gray', linewidth = 1, clip_on=False)
 
@@ -215,8 +218,8 @@ for rownum, c in enumerate(row_order):
 cbar = f.add_axes([0.21, -0.02, 0.55, 0.03])
 f.colorbar(im, cax=cbar, ticks=[-2, 2], orientation='horizontal')
 cbar.set_xticklabels([
-    'Vertically Aligned\nCategory', 
-    'Horizontally Aligned\nCategory', 
+    'Vertically Aligned\nCategory',
+    'Horizontally Aligned\nCategory',
 ],**fontsettings)
 cbar.tick_params(length = 0)
 

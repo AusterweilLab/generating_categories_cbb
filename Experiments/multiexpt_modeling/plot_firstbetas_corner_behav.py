@@ -15,7 +15,8 @@ def compile_file(filename):
 	with open(filename, encoding='utf-8') as f:
 		return compile(f.read(), filename, 'exec')
 
-cur_dir = 'Experiments/multiexpt_modeling'
+# cur_dir = 'Experiments/multiexpt_modeling'
+cur_dir = ''
 
 exec(compile_file(os.path.join(cur_dir,'Imports.py')))
 exec(compile_file(os.path.join(cur_dir,'ImportModels.py')))
@@ -91,16 +92,16 @@ with open(os.path.join(cur_dir,bestparmdb), "rb" ) as f:
 
 #Rebuild it into a smaller dict
 best_params = dict()
-for modelname in best_params_t.keys():    
+for modelname in best_params_t.keys():
     best_params[modelname] = dict()
     for i,parmname in enumerate(best_params_t[modelname]['parmnames']):
         parmval = best_params_t[modelname]['bestparmsll']
         best_params[modelname][parmname] = parmval[i]
 modelList = [Packer,RepresentJK13]
-#modelList = [CopyTweak,CopyTweakRep,Packer, RepresentJK13,]                            
+#modelList = [CopyTweak,CopyTweakRep,Packer, RepresentJK13,]
 #Specify plot order
 modelPlotOrder = np.array([[Packer,RepresentJK13],[CopyTweak,ConjugateJK13]])
-     
+
 unique_trials = 'all'
 trials.task = task
 
@@ -127,7 +128,7 @@ for i,first in enumerate(firsts):
     freq = first.value_counts(normalize=True,sort=False).sort_index()
     p = np.zeros(len(stimuli))
     p[freq.keys()] = freq.values
-    ps += [p]    
+    ps += [p]
     gps = funcs.gradientroll(p,'roll')[:,:,0]
     ps_ElRange = gps.max()-gps.min();
     plotVals = (gps-gps.min())/ps_ElRange
@@ -186,15 +187,15 @@ for i,first in enumerate(firsts):
 #             ax[i,0].bar(distxu,nxp,width=bwidth,color='None',edgecolor='k')
 #             ax[i,1].bar(distyu,nyp,width=bwidth,color='None',edgecolor='k')
             ax[i,0].bar(distxu,nxp,width=bwidth)
-            ax[i,1].bar(distyu,nyp,width=bwidth)    
+            ax[i,1].bar(distyu,nyp,width=bwidth)
             datarx = pearsonr(nxp,distxu)
             datary = pearsonr(nyp,distyu)
             print('Data %s corr x = %f, p = %f'%(ys[i],datarx[0],datarx[1]))
             print('Data %s corr y = %f, p = %f'%(ys[i],datary[0],datary[1]))
-            
+
 #             mx = datarx[0]*np.std(nxp)/np.std(distxu)#np.cov(distxu,nxp)[0,1]
 #             cx = np.mean(nxp) - mx*(np.mean(distxu))
-    
+
 #             my = datary[0]*np.std(nyp)/np.std(distyu)#np.cov(distxu,nxp)[0,1]
 #             cy = np.mean(nyp) - my*(np.mean(distyu))
 #             ax[i,0].plot([0,1],[cx,cx+mx],'-')
@@ -208,7 +209,7 @@ for i,first in enumerate(firsts):
 #             print('Data %s corr euc = %f, p = %f'%(ys[i],datare[0],datare[1]))
 
         # Get model predictions
-        ps = model(categories,params,wrap_ax=wrap_ax).get_generation_ps(stimuli,1,'generate')                
+        ps = model(categories,params,wrap_ax=wrap_ax).get_generation_ps(stimuli,1,'generate')
         distsp = np.abs(stimuli)
         distxp = distsp[:,0]
         distyp = distsp[:,1]
@@ -241,12 +242,12 @@ for i,first in enumerate(firsts):
         pry = pearsonr(psyu,distypu)
         print('%s %s corr x = %f, p = %f'%(model.modelshort,ys[i],prx[0],prx[1]))
         print('%s %s corr y = %f, p = %f'%(model.modelshort,ys[i],pry[0],pry[1]))
-        
+
 
     print('\n')
 ax[1,1].set_visible(False)
-# ax[0,1].legend({'Packer','Rep'},fontsize=14)      
+# ax[0,1].legend({'Packer','Rep'},fontsize=14)
 plt.show()
-if saveplots:  
+if saveplots:
     plt.savefig('private/firstbetas_distcent.pdf',bbox_inches='tight')
 #plt.savefig('private/firstbetas_distcentModelOverlay.pdf')

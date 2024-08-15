@@ -24,7 +24,7 @@ def stats_battery(betaSet, alphas = None, wrap_ax=None, ax_range=2, ax_step=.25)
         res['xrange'], res['yrange'] = np.ptp(betas,axis=0)
         if not wrap_ax is None:
             if not type(wrap_ax) is list:
-                wrap_ax = [wrap_ax]            
+                wrap_ax = [wrap_ax]
             for ax in wrap_ax:
                 betax = betas[:,ax]
                 raw_range = np.max(betax) - np.min(betax)
@@ -41,7 +41,7 @@ def stats_battery(betaSet, alphas = None, wrap_ax=None, ax_range=2, ax_step=.25)
                     res['yrange'] = wrapped_range
                 else:
                     raise ValueError('stats_battery function not defined for wrapping third (or higher-dimension) features/axes.')
-        
+
         res['drange'] = res['xrange'] - res['yrange']
         res['xstd'],   res['ystd']   = np.std(betas, axis=0)
 
@@ -57,7 +57,7 @@ def stats_battery(betaSet, alphas = None, wrap_ax=None, ax_range=2, ax_step=.25)
         else:
             res['area'] = np.nan
 
-        # distances 
+        # distances
         within_mat = pdist(betas, betas)
         res['within'] = np.mean(within_mat[np.triu(within_mat)>0])
         betweendist = [np.mean(pdist(betas,betatemp)) for idxtemp,betatemp in enumerate (betaSetRun) if idx != idxtemp]
@@ -66,12 +66,12 @@ def stats_battery(betaSet, alphas = None, wrap_ax=None, ax_range=2, ax_step=.25)
         res['between'] = np.mean(betweendist)
         resSet.append(res)
     resmean = {}
-    for key in res.keys():
+    for key in list(res.keys()):
         statlist = []
         for tempres in resSet:
             statlist.append(tempres[key])
         resmean[key] = np.mean(statlist)
-    
+
     return resmean
 
 
@@ -87,11 +87,11 @@ def BFtt(N,t,r=.707):
     # 010219 - Moved from MATLAB to python
     v = N-1;
     B01numr = (1.+(t**2.)/v)**-((v+1.)/2.);
-    
+
     def B01denmFunc(g):
         out = ((1.+N*g)**(-1./2.)) * ((1. + (t**2.)/((1.+N*g)*v))**-((v+1.)/2.)) * (r*(2.*np.pi)**(-1./2.)) * (g**(-3./2.)) * np.exp(-(r**2.)/(2.*g))
         return out
-    
+
     B01denm = integrate.quad(B01denmFunc,0,np.inf)
     B01 = B01numr/B01denm[0];
     return B01
@@ -99,7 +99,7 @@ def BFtt(N,t,r=.707):
 def ndspace(n, d, low = -1.0, high = 1.0):
     """
     Generate coordinates of points based on an evenly distributed d-dimensional
-    grid, sampled at n points along each dimension. User may specify low and high 
+    grid, sampled at n points along each dimension. User may specify low and high
     points of grid. Defaults: low = -1, high = +1
 
     Example: Making a 3-dimensional binary space
@@ -121,13 +121,13 @@ def ndspace(n, d, low = -1.0, high = 1.0):
 
 def print2dspace(n, op = 'return'):
     """
-    Print to the console the arrangment and numbers of 
+    Print to the console the arrangment and numbers of
     elements in an n-by-n space.
     """
     vals = gradientroll(np.arange(n**2), 'roll')[:,:,0]
     if op == 'print':
         print(vals)
-    else: 
+    else:
         return vals
 
 
@@ -135,7 +135,7 @@ def diffs1D(X, Y):
     """
         Get pairwise differences in 1D
     """
-    return np.atleast_2d(X).transpose() - np.atleast_2d(np.array(Y)) 
+    return np.atleast_2d(X).transpose() - np.atleast_2d(np.array(Y))
 
 def histvec(X, bins, density = False):
     """
@@ -185,7 +185,7 @@ def gradientroll(G, op):
 
     gradientroll(G,'roll') will convert a 2D maxtrix G into a 3D array of
     square gradients, the size of which is determined by sqrt(G.shape[0]).
-    
+
     gradientroll(G,'unroll') will turn a square matrix G (which can be
     stacked in 3D) into an array of column vectors (one for each 3D slice).
     """
@@ -202,7 +202,7 @@ def gradientroll(G, op):
 
     # convert a column matrix into a set of 2d matrices
     elif op == 'roll':
-        
+
         # ensure G is a 2D column vector
         if G.ndim == 1:
             G = np.atleast_2d(G).T
@@ -213,19 +213,21 @@ def gradientroll(G, op):
 
 def pdist(X, Y, w = np.array([]), wrap_ax = None, ax_range = 2, ax_step = .25):
     """
-    Calculate weighted city-block distance between two ND arrays
-    
+    Calculate weighted city-block distance between two ND arrays.
+
+    Equivalent to `pdist_gen(p=1, ...)`.
+
     Parameters
     ----------
     X, Y: 2D arrays containing rows to be compared.
         X and Y must have the same number of columns.
         Distance is computed between rows of X and Y
-    w (optional): 1D array of column weights. 
-        Must contain 1 value per column of X and Y. 
+    w (optional): 1D array of column weights.
+        Must contain 1 value per column of X and Y.
         Should sum to 1, but this is not enforced.
         If w is not provided, all weights are set at 1/ncols
     Returns an nX-by-nY array of weighted city-block distance.
-    
+
     wrap_ax indicates which axis is boundless (i.e., take the shortest of either the distance or max-distance)
 
     ax_range is the limits of both axes
@@ -239,54 +241,27 @@ Examples
     >>> pdist(X,Y)
     array([[ 0.5  1. ]
            [ 1.   0.5]])
+    # both x- and y-axis have a 0.5 weight
     >>> w = np.array([0, 1])
     >>> pdist(X,Y,w)
     array([[0 1]
            [1 0]])
+    # now x-axis (column 0) has 0 weight, y-axis (column 1) has 1 weight
     """
-
-    # get info
-    nX, nY, ncols =  X.shape[0], Y.shape[0], X.shape[1]
-
-    # uniform weights if not otherwise provided
-    if not w.size:
-        w = np.array([1.0/ncols for i in range(ncols)])
-
-    # tile to common sizes
-    X = np.tile(X[:,:,None], (1,1,nY) )
-    Y = np.tile(np.swapaxes(Y[:,:,None],0,2),(nX,1,1))
-    w = w[None,:,None]
-    # compute distance
-    difference = X - Y
-    #If any axis is boundless, take its minimum of either d or max-d
-    if not wrap_ax is None:
-        if not type(wrap_ax) is list:
-            wrap_ax = [wrap_ax]
-        #print('Old diff: {}'.format(difference[:,1]))
-        for ax in wrap_ax:
-            #Ensure ax is int of some sortif not None
-            if not ax is None:
-                ax = int(ax)
-                diff_ax = np.abs(difference[:,ax].copy())
-                diff_alt = ax_range-diff_ax + ax_step
-                diff_min = np.min([diff_ax,diff_alt],axis=0)
-                difference[:,ax] = diff_min
-        #print('New diff: {}'.format(difference[:,ax]))
-
-    weighted_distance = np.multiply(difference, w)
-    return np.sum( np.abs(weighted_distance), axis = 1 )
+    p = 1
+    return pdist_gen(X, Y, w, p, wrap_ax, ax_range, ax_step)
 
 def pdist_gen(X, Y, w = np.array([]), p = 2,wrap_ax = None,ax_range = 2,ax_step = .25):
     """
     Calculate generalised weighted distance between two ND arrays.
-    
+
     Parameters
     ----------
     X, Y: 2D arrays containing rows to be compared.
         X and Y must have the same number of columns.
         Distance is computed between rows of X and Y
-    w (optional): 1D array of column weights. 
-        Must contain 1 value per column of X and Y. 
+    w (optional): 1D array of column weights.
+        Must contain 1 value per column of X and Y.
         Should sum to 1, but this is not enforced.
         If w is not provided, all weights are set at 1/ncols
     p (defaults to 2): p-norm to determine distance metrice. If
@@ -298,9 +273,9 @@ def pdist_gen(X, Y, w = np.array([]), p = 2,wrap_ax = None,ax_range = 2,ax_step 
     wrap_ax indicates which axis is boundless (i.e., take the shortest of either the distance or max-distance)
 
     ax_range is the limits of both axes (assumed to be same across all axes)
-    
+
     ax_step is the unit-size of each step (assumed to be same across all axes)
-    
+
     Examples
     --------
     >>> X = np.array([[0,0],[0,1]])
@@ -333,14 +308,16 @@ def pdist_gen(X, Y, w = np.array([]), p = 2,wrap_ax = None,ax_range = 2,ax_step 
             wrap_ax = [wrap_ax]
         for ax in wrap_ax:
             #Ensure ax is int of some sort
-            ax = int(ax)
-            diff_ax = np.abs(difference[:,ax].copy())
-            diff_alt = ax_range-diff_ax + ax_step
-            diff_min = np.min([diff_ax,diff_alt],axis=0)
-            difference[:,ax] = diff_min
+            if not ax is None:
+                ax = int(ax)
+                diff_ax = np.abs(difference[:,ax].copy())
+                diff_alt = ax_range-diff_ax + ax_step
+                diff_min = np.min([diff_ax,diff_alt],axis=0)
+                difference[:,ax] = diff_min
 
     weighted_distance = np.multiply(difference, w)
-    return np.power(np.sum( weighted_distance**p, axis = 1 ),1./p) #Euclidean, so sqrt the summed sq distance
+    # Kesong summer 2024 note: BUGFIX: use `np.abs()` to avoid distance miscalculation
+    return np.power(np.sum( np.abs(weighted_distance)**p, axis = 1 ),1./p) #Euclidean, so sqrt the summed sq distance
 
 def aic(loglike,nparms):
         aic = 2.0*nparms - 2.0* (-1.0 * loglike)
@@ -358,7 +335,7 @@ def jitterize(points, sd = 0.0001):
 def wpick(ps):
     """
     Function to pick from a set a probabilities.
-        
+
     """
     #Deal with negative ps - return None?
     ps = np.array(ps)
@@ -367,7 +344,7 @@ def wpick(ps):
         #ps = ps/sum(pslin)
         return None
     else:
-        return np.random.choice(range(len(ps)), p = ps)
+        return np.random.choice(list(range(len(ps))), p = ps)
 
 def intersect2d(X, Y):
     """
@@ -391,7 +368,7 @@ def softmax(X, theta = 1.0, axis = None, toggle = True):
     X: ND-Array. NaN values will have probability 0.
     theta (optional): float parameter, used as a multiplier
         prior to exponentiation. Default = 1.0
-    axis (optional): axis to compute values along. Default is the 
+    axis (optional): axis to compute values along. Default is the
         first non-singleton axis.
 
     Returns an array the same size as X. The result will sum to 1
@@ -418,20 +395,20 @@ def softmax(X, theta = 1.0, axis = None, toggle = True):
     if axis is None:
         axis = next(j[0] for j in enumerate(y.shape) if j[1] > 1)
 
-    # multiply y against the theta parameter, 
+    # multiply y against the theta parameter,
     # then subtract the max for numerical stability
     y = y * float(theta)
 
-        
-    
+
+
     # exponentiate y, then convert nans into 0
     if toggle:
         y = y - np.expand_dims(np.nanmax(y, axis = axis), axis)
         y = np.exp(y)
-    
 
-        
-        
+
+
+
     y[np.isnan(y)] = 0.0
 
     # take sum along axis, divide elementwise
@@ -440,8 +417,8 @@ def softmax(X, theta = 1.0, axis = None, toggle = True):
         p = np.zeros(y.shape)#p = np.array([0])
     else:
         p = y / ax_sum
-        
-        
+
+
     # flatten if X was 1D
     if len(X.shape) == 1:
         p = p.flatten()
@@ -459,7 +436,7 @@ def luce(X, theta = 1.0, axis = None, toggle = True):
     X: ND-Array. NaN values will have probability 0.
     theta (optional): float parameter, used as a multiplier
         . Default = 1.0
-    axis (optional): axis to compute values along. Default is the 
+    axis (optional): axis to compute values along. Default is the
         first non-singleton axis.
 
     Returns an array the same size as X. The result will sum to 1
@@ -486,17 +463,17 @@ def luce(X, theta = 1.0, axis = None, toggle = True):
     if axis is None:
         axis = next(j[0] for j in enumerate(y.shape) if j[1] > 1)
 
-    # multiply y against the theta parameter, 
+    # multiply y against the theta parameter,
     # then subtract the max for numerical stability
     y = y * float(theta)
 
-        
-    
+
+
     # exponentiate y, then convert nans into 0
         # if toggle:
         #         y = y - np.expand_dims(np.nanmax(y, axis = axis), axis)
-        #         y = np.exp(y)            
-        
+        #         y = np.exp(y)
+
     y[np.isnan(y)] = 0.0
 
     # take sum along axis, divide elementwise
@@ -505,8 +482,8 @@ def luce(X, theta = 1.0, axis = None, toggle = True):
         p = np.zeros(y.shape)
     else:
         p = y / ax_sum
-        
-        
+
+
     # flatten if X was 1D
     if len(X.shape) == 1:
         p = p.flatten()
@@ -518,7 +495,7 @@ def luce(X, theta = 1.0, axis = None, toggle = True):
 def logit_scale(x, min=0, max=1, direction=1):
         """
         Logit function. Useful for squeezing real number line between 0 and 1.
-        
+
         Set direction to 1 for regular, or -1 for inverse.
         """
         range = max-min
@@ -536,7 +513,7 @@ def logit_scale(x, min=0, max=1, direction=1):
 def log_scale(x, bound = 0, direction = 1):
         """
         Log transformation function. Adjusts for the bound (i.e.,
-        the min or max doesn't need to be 0). 
+        the min or max doesn't need to be 0).
         Direction with 1 is regular, and -1 is reverse.
         """
         if direction == 1:
@@ -548,7 +525,7 @@ def log_scale(x, bound = 0, direction = 1):
                 xed = bound+x
                 return xed
 
-        
+
 # Validate input
 def valInput(s,options):
         """
@@ -572,7 +549,7 @@ def valInput(s,options):
                 prints += '[' + str(ct) + '] ' + i + '\n'
                 ct += 1
         try:
-                outi = int(raw_input(prints))                
+                outi = int(input(prints))
                 outs = options[outi]
         except KeyboardInterrupt:
                 import sys
@@ -583,41 +560,41 @@ def valInput(s,options):
 
         return outi
 
-        
+
 def valData(ins,s,options,tries = 5):
         """
         Checks if the supplied INS is a valid option among OPTIONS. Otherwise,
-        prompt user with S. 
+        prompt user with S.
 
         """
         if ins in options:
                 outi = options.index(ins)
-        else:        
+        else:
                 outi = valInput(s,options)
 
         outs = options[outi]
         tries -= 1
         if tries <=0:
                 raise Exception('Please try again and then select an appropriate option.'+\
-                                '\nIt\'s really not that hard.\n')        
+                                '\nIt\'s really not that hard.\n')
         if outi<0:
-                outs = valData(ins,s,options,tries)                
-                
+                outs = valData(ins,s,options,tries)
+
         return outs
 
 def getMatch(match,db='../cat-assign/data_utilities/cmp_midbot.db',fetch='Old'):
         """
-        Fetch the Old and Matched participant number given some database. 
+        Fetch the Old and Matched participant number given some database.
         Matches to the matched ppt number by default (i.e., fetches the old ppt number).
         """
         conn  = sqlite3.connect(db)
-        
+
         #Use cursor method to get data, since it doesn't seem to like sqlite3 for some reason
         c = conn.cursor()
         c.execute('SELECT * FROM stimuli')
         data = c.fetchall();
         dataA = np.array(data);
-        uniquePpt = np.unique(dataA[:,0]);        
+        uniquePpt = np.unique(dataA[:,0]);
         ar = [[int(ppt),int(dataA[dataA[:,0]==ppt,1][0])] for ppt in uniquePpt]
         #uniquePpt = [[row[0],row[1]] for i,row in enumerate(data) if row[0] != data[max(i-1,0)][0]] #whoo. Ugly, but works! Actually no it doesn't. It leaves out index 0:(
         ar = np.array(ar)
@@ -641,7 +618,7 @@ def getMatch(match,db='../cat-assign/data_utilities/cmp_midbot.db',fetch='Old'):
                         out = [];
 
         return out
-    
+
 def getCatassignID(inID,source='analysis',fetch='old'):
     '''
     #Fetch participant IDs from the catassign experiment (similar to getMatch, but takes
@@ -655,8 +632,8 @@ def getCatassignID(inID,source='analysis',fetch='old'):
     with open(file,'rb') as f:
         data = pickle.load(f)
     if isinstance(inID,int):
-        out = data.loc[data[source] == inID][fetch].item()        
-    elif inID is 'all':
+        out = data.loc[data[source] == inID][fetch].item()
+    elif inID == 'all':
         out = list(data[source])
     elif hasattr(inID,'__len__'):
         out = []
@@ -667,10 +644,10 @@ def getCatassignID(inID,source='analysis',fetch='old'):
         out = int(out)
     elif isinstance(out,list):
         out = [int(i) if not np.isnan(i) else np.nan for i in out]
-        
+
     return out
-    
-    
+
+
 #Function to print iteration progress nicely
 def printProg(i,print_ct = 0, steps = 1, breakline = 40, breakby = 'char'):
         """
@@ -696,9 +673,9 @@ def printProg(i,print_ct = 0, steps = 1, breakline = 40, breakby = 'char'):
                         else:
                                 #No line break
                                 print(i,end="")
-                                sys.stdout.flush()                                
+                                sys.stdout.flush()
                                 print_ct += leni+1
-                
+
                 elif breakby == 'mult':
                         if np.mod(i,breakline) != 0:
                                 #No line break
@@ -720,7 +697,7 @@ def getrange(stimuli):
     for i in range(len(stimuli[0])):
         stimrange += [{'min': stimuli[:,i].min(),
                        'max': stimuli[:,i].max()}]
-        
+
     ndim = stimuli.shape[1]
     stimstep = []
     for di in range(ndim):
@@ -729,14 +706,14 @@ def getrange(stimuli):
         stimstep += [st]
 
     return stimrange,stimstep
-        
 
-    
+
+
 def getModelName(modelname,fetch='short'):
     '''
     Fetches the specified model name. FETCH can be 'short',long','class'.
     '''
-    execfile('Imports.py')
+    exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
     from Modules.Classes import CopyTweak
     from Modules.Classes import Packer
     from Modules.Classes import ConjugateJK13
@@ -750,7 +727,7 @@ def getModelName(modelname,fetch='short'):
     from Modules.Classes import NPacker
     from Modules.Classes import NCopyTweak
 
-            
+
     model_keywords = dict()
     modelnames = dict()
     models = [Packer,CopyTweak,ConjugateJK13,RepresentJK13,CopyTweakRep,PackerRep,PackerEuc,
@@ -772,20 +749,20 @@ def getModelName(modelname,fetch='short'):
     fetchtypes = ['short','long','class']
     fetchidx = fetchtypes.index(fetch)
     #Then try to identify the requested model
-    fetchmodel = ''    
-    for model in model_keywords.keys():        
+    fetchmodel = ''
+    for model in list(model_keywords.keys()):
         if modelname in model_keywords[model]:
             fetchmodel = modelnames[model][fetchidx]
             return fetchmodel
-            
-    
+
+
 def get_initials(input,num_letters = 1,include_delim = True):
     '''
     Extracts the first num_letters of every word in a string. Treats underscores as delimiters.
     '''
     import re
     if include_delim:
-        delim = re.findall('[\s+_]',input)
+        delim = re.findall(r"[\s+_]",input)
         delim += [''] #last delimiter is blank
         output = "".join(item[0:num_letters]+delim[i] for i,item in enumerate(re.findall("[a-zA-Z0-9]+", input)))
     else:
@@ -800,7 +777,7 @@ def get_corr(start_params,pptdata,tso,model_obj,fixedparams=None,pearson=True,pr
     the prep_corrvar function.
 
     """
-    execfile('Imports.py')
+    exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
     import Modules.Funcs as funcs
     from Modules.Classes import ConjugateJK13
     from Modules.Classes import RepresentJK13
@@ -810,19 +787,19 @@ def get_corr(start_params,pptdata,tso,model_obj,fixedparams=None,pearson=True,pr
     from scipy.stats import stats as ss
     #convert free parms to dict
     if not type(start_params) is dict:
-        start_params = model_obj.params2dict(start_params)        
+        start_params = model_obj.params2dict(start_params)
 
     # extract fixed parameters and feed it into start_params variable
     if hasattr(fixedparams,'keys'):
-        for parmname in fixedparams.keys():
+        for parmname in list(fixedparams.keys()):
             start_params[parmname] = fixedparams[parmname]
 
-    
+
     #Get log likelihoods
     ll_list = []
     print_ct = 0
     for pi,pptdatarow in pptdata.iterrows():
-        params = start_params.copy()        
+        params = start_params.copy()
         params['wts'] = pptdatarow['ppt_att']
         if model_obj ==  ConjugateJK13 or model_obj == RepresentJK13:
             params['wts'] = 1.0 - params['wts']
@@ -830,7 +807,7 @@ def get_corr(start_params,pptdata,tso,model_obj,fixedparams=None,pearson=True,pr
         model = model_obj(np.array([[0,0]]), params)
         #pptdata = pd.DataFrame(columns = ['condition','betas'])
         if parmxform:
-            #transform parms    
+            #transform parms
             params = model.parmxform(params, direction = 1)
         tso_ppt = tso[pi]
         raw_array = []#np.zeros((1,nbetapermute))#np.zeros((nstim,nbetapermute))
@@ -840,21 +817,21 @@ def get_corr(start_params,pptdata,tso,model_obj,fixedparams=None,pearson=True,pr
             # and add it to the log of the same constant
             raw_array_ps = tso_ppti.loglike(params,model_obj)
             raw_array += [raw_array_ps]
-            
-        raw_array_sum = np.array(raw_array) #raw_array.sum(0)    
+
+        raw_array_sum = np.array(raw_array) #raw_array.sum(0)
         raw_array_sum_max = raw_array_sum.max()
         raw_array_t = np.exp(-(raw_array_sum - raw_array_sum_max)).sum()
         raw_array_ll = -np.log(raw_array_t) + raw_array_sum_max
         ll_list += [raw_array_ll]
         if print_on:
             #Print progress
-            print_ct = funcs.printProg(pi,print_ct,steps = 1, breakline = 20, breakby = 'char')            
+            print_ct = funcs.printProg(pi,print_ct,steps = 1, breakline = 20, breakby = 'char')
 
     #ll_list = np.atleast_2d(ll_list)
     error_list = pptdata.ppterror.as_matrix()
     if pearson:
         corr = ss.pearsonr(ll_list,error_list)
-    else:        
+    else:
         corr = ss.spearmanr(ll_list,error_list)
 
     r = corr[0] * -1.0
@@ -872,7 +849,7 @@ def prep_corrvar(info,assignment,stimuli,stats,WT_THETA=1.5,print_on=True):
     """
     Prepares variables to be used in get_corr
     """
-    execfile('Imports.py')
+    exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
     import Modules.Funcs as funcs
     from Modules.Classes import Simulation
     import pandas as pd
@@ -899,10 +876,10 @@ def prep_corrvar(info,assignment,stimuli,stats,WT_THETA=1.5,print_on=True):
         pptloc = info['pptmatch']==pptmatch
         #Get alphas with an ugly line of code
         alphas  = eval(info['stimuli'].loc[pptloc].as_matrix()[0])[0:4];
-        betas = eval(info['stimuli'].loc[pptloc].as_matrix()[0])[4:8];        
+        betas = eval(info['stimuli'].loc[pptloc].as_matrix()[0])[4:8];
         pptdata = pptdata.append(
             dict(pptmatch = pptmatch, ppterror = 1-accuracyEl,
-                 ppt_att = funcs.softmax(-ranges, theta = WT_THETA)[0]),            
+                 ppt_att = funcs.softmax(-ranges, theta = WT_THETA)[0]),
             ignore_index=True
         )
 
@@ -916,7 +893,7 @@ def prep_corrvar(info,assignment,stimuli,stats,WT_THETA=1.5,print_on=True):
         tso_ppt = []
         for beta in funcs.permute(betas):
             categories = alphas
-            trials = range(nstim)
+            trials = list(range(nstim))
             pptDF = pd.DataFrame(columns = ['participant','stimulus','trial','categories'])
             pptDF.stimulus = pd.to_numeric(pptDF.stimulus)
             #Initialise trialset object
@@ -931,7 +908,7 @@ def prep_corrvar(info,assignment,stimuli,stats,WT_THETA=1.5,print_on=True):
         tso += [tso_ppt]
         if print_on:
             print_ct = funcs.printProg(i,print_ct,steps = 1, breakline = 20, breakby = 'char')
-            
+
     return pptdata,tso
 
 def compress_chtc_parms(best_params_t):
@@ -941,7 +918,7 @@ def compress_chtc_parms(best_params_t):
     '''
     #Rebuild it into a smaller dict
     best_params = dict()
-    for modelname in best_params_t.keys():    
+    for modelname in list(best_params_t.keys()):
         best_params[modelname] = dict()
         for i,parmname in enumerate(best_params_t[modelname]['parmnames']):
             parmval = best_params_t[modelname]['bestparmsll']
@@ -959,7 +936,7 @@ def mvgamma(p,a):
         out = (np.pi**((p-1)/2.)) * gamma(a) * mvgamma(p-1,a-(1/2.))
     return out
 
-        
+
 def invwishartpdf(X,scale,nu):
     #Weirdly, it looks like the default scipy.stats invwishart doesn't like the df (nu) being less than the number of dimensions p, even though wikipedia says that's ok as long as it's more than p-1? This is my attempt at producing invwishart pdfs without that constraint. Really basic stuff though - doesn't currently do any checks that the scale or psi are positive definite etc.
     from numpy.linalg import det
@@ -975,7 +952,7 @@ def invwishartpdf(X,scale,nu):
     xinv = np.linalg.inv(X)
     e_co = np.exp(-1/2. * np.trace(np.matmul(scale,xinv)))
     tr = np.trace(np.matmul(scale,xinv))
-    
+
     out = numerator/denom * x_co * e_co #numerator/denom/x_co * e_co #numerator/denom * x_co * e_co
     return out
 
@@ -1003,16 +980,16 @@ class Line(object):
             m = diff[1]/diff[0]
             c = A[1] - m*A[0]
         return (m,c)
-    
+
     def checkxy(self,x,y,line2):
-        #Check that x- and y-value of intercept lies within ranges of lines 
+        #Check that x- and y-value of intercept lies within ranges of lines
         yr1 = self.ys
         yr2 = line2.ys
         yrs = [yr1,yr2]
         for yr in yrs:
             if y<min(yr)or y>max(yr):
                 return False
-        
+
         xr1 = self.xs
         xr2 = line2.xs
         xrs = [xr1,xr2]
@@ -1025,9 +1002,9 @@ class Line(object):
 def intersect(line1,line2):
     #Get the intersect between two lines
     #If it doesn't exist within the ranges of the lines, return None
-    #line1 and line2 are line Objects created with Line(pointA,pointB)    
+    #line1 and line2 are line Objects created with Line(pointA,pointB)
     m1,c1 = line1.eq
-    m2,c2 = line2.eq 
+    m2,c2 = line2.eq
     #if m's are equal, they're parallel and will never intersect
     if m1==m2:
         return(None,None)
@@ -1037,26 +1014,26 @@ def intersect(line1,line2):
     elif np.isinf(m1):
         x = line1.xs[0]
         y = m2*x + c2
-        if line1.checkxy(x,y,line2):  
+        if line1.checkxy(x,y,line2):
             return np.array((x,y))
         else:
-            return (None,None)        
+            return (None,None)
     elif np.isinf(m2):
         x = line2.xs[0]
         y = m1*x + c1
-        if line2.checkxy(x,y,line1):  
+        if line2.checkxy(x,y,line1):
             return np.array((x,y))
         else:
-            return (None,None) 
-    
+            return (None,None)
+
     #Otherwise, derive x and y accordingly
-    x = (c2-c1)/(m1-m2)  
+    x = (c2-c1)/(m1-m2)
     y = m1*x + c1
-    if line1.checkxy(x,y,line2):  
+    if line1.checkxy(x,y,line2):
         return np.array((x,y))
     else:
         return (None,None)
-    
+
 def isinhull(hull,point):
     #Check if point is within the hull
     #If point changes the vertices of the hull, return false
@@ -1067,7 +1044,7 @@ def isinhull(hull,point):
     pnew = newpoints[newhull.vertices]
     if not len(pold) == len(pnew):
         return False
-    else: 
+    else:
         #If same length, test for equivalence across all elements
         if np.all(pold == pnew):
             return True
@@ -1103,7 +1080,7 @@ def overlapArea(cat1,cat2):
             inVerts += [p]
 
     overVerts = ints+inVerts
-    
+
     if len(overVerts)>0:
         hullOver = ConvexHull(overVerts)
         return hullOver.volume

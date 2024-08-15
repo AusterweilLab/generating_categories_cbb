@@ -15,7 +15,9 @@ def compile_file(filename):
 	with open(filename, encoding='utf-8') as f:
 		return compile(f.read(), filename, 'exec')
 
-cur_dir = 'Experiments/multiexpt_modeling'
+# cur_dir = 'Experiments/multiexpt_modeling'
+cur_dir = ''
+
 
 exec(compile_file(os.path.join(cur_dir,'Imports.py')))
 exec(compile_file(os.path.join(cur_dir,'ImportModels.py')))
@@ -85,7 +87,7 @@ with open(os.path.join(cur_dir,bestparmdb), "rb" ) as f:
 
 #Rebuild it into a smaller dict
 best_params = dict()
-for modelname in best_params_t.keys():    
+for modelname in best_params_t.keys():
     best_params[modelname] = dict()
     for i,parmname in enumerate(best_params_t[modelname]['parmnames']):
         parmval = best_params_t[modelname]['bestparmsll']
@@ -96,7 +98,7 @@ modelList = [Packer,RepresentJK13]
 modelPlotOrder = np.array([[Packer,RepresentJK13],[CopyTweak,ConjugateJK13]])
 #modelPlotOrder = np.array([[CopyTweak,CopyTweakRep],[Packer,RepresentJK13]])
 
-        
+
 unique_trials = 'all'
 trials.task = task
 
@@ -108,16 +110,20 @@ alphas = pd.read_sql_query("SELECT * from alphas", con)
 stimuli = pd.read_sql_query("SELECT * from stimuli", con).values
 con.close()
 
-# create categories mapping                                                                             
+# create categories mapping
 mapping = pd.DataFrame(columns = ['condition', 'categories'])
 for i in alphas.columns:
     As = alphas[i].values.flatten()
-    mapping = mapping.append(
-        dict(condition = i, categories =[As]),
+    # mapping = mapping.append(
+    #     dict(condition = i, categories =[As]),
+    #     ignore_index = True
+    # )
+    mapping = pd.concat(
+        [mapping, pd.DataFrame([dict(condition = i, categories =[As])])],
         ignore_index = True
     )
 
-# merge categories into generation                                                                      
+# merge categories into generation
 generation = pd.merge(generation, participants, on='participant')
 generation = pd.merge(generation, mapping, on='condition')
 
@@ -128,7 +134,7 @@ def generateOnePerm(condition,generation,stimuli):
     #Generate only the first trial no betas
     genppts = generation.loc[(generation.condition==condition)&(generation.trial==0)]
     genppt = genppts.iloc[0:1]
-    # create trial set object                                                                               
+    # create trial set object
     trials = Simulation.Trialset(stimuli)
     trials = trials.add_frame(genppt)
     trials.task = 'generate'
@@ -149,7 +155,7 @@ plot_pre = ['(a)','(b)','(c)']
 #Plot model predictions
 for ci,condition in enumerate(conditions):
     f,ax = plt.subplots(1,nmodels+adjplot,figsize = (3*nmodels, 2))
-    
+
     if ci==0:
         #Plot blank condition
         blankA = [0,8,72,80]
@@ -159,7 +165,7 @@ for ci,condition in enumerate(conditions):
         # ax[0,1].text(-150,220,'(b)',fontsize=fs+4)
         #         ax[1].set_title('(b)',fontsize=fs+4)
     else:
-        funcs.plotclasses(ax[0], stimuli, [], [])    
+        funcs.plotclasses(ax[0], stimuli, [], [])
         ax[0].set_title('(a) Stimulus Space',fontsize=fs)
 
 
@@ -173,17 +179,17 @@ for ci,condition in enumerate(conditions):
         wrap_ax = np.nan
     if np.isnan(wrap_ax):
         wrap_ax = None
-    for m,model in enumerate(modelList):        
+    for m,model in enumerate(modelList):
 
         if len(ax.shape)>1:
             ax[0,m+adjplot].set_title('{} {}'.format(plot_pre[m+adjplot],model.modelshort),fontsize=fs)
 #             ax[ci,adjplot].set_ylabel('{}'.format(cond_labs[ci]),rotation=0,labelpad=lp,fontsize=fs)
-        else:                    
+        else:
             ax[m+adjplot].set_title('{} {}'.format(plot_pre[m+adjplot],model.modelshort),fontsize=fs)
-        
+
         params = best_params[model.model]
         #Plot heatmap for each model
-        categories = [trialppt.stimuli[i,:] for i in trialppt.Set[0]['categories'] if len(i)>0]
+        categories = [trialppt.stimuli[i,:] for i in trialppt.responses[0]['categories'] if len(i)>0]
         ps += [model(categories,params,trialppt.stimrange,stimstep=stimstep,wrap_ax=wrap_ax).get_generation_ps(space,1,'generate')]
         #Get lls for each trial step
         ll_trial += [trialppt.loglike(params=params,model=model,parmxform=False,whole_array=True)]
@@ -195,19 +201,19 @@ for ci,condition in enumerate(conditions):
     plotVals = []
     psMax = 0
     psMin = 1
-    #Get range                                                                                                                                     
+    #Get range
     for ps_el in ps:
         psMax = max(psMax,ps_el.max())
         psMin = min(psMin,ps_el.min())
 
-    #Normalise all values                                                                                                                          
+    #Normalise all values
     psRange = psMax-psMin
     for i,ps_el in enumerate(ps): #each ps element correspond to a model
         plotct += 1
         gps = funcs.gradientroll(ps_el,'roll')[:,:,0]
 #         plotVals += [gps]
         ps_ElRange = gps.max()-gps.min()
-        plotVals += [(gps-gps.min())/ps_ElRange]  #Change ps_ElRange to psRange to normalize across all models                                                                           
+        plotVals += [(gps-gps.min())/ps_ElRange]  #Change ps_ElRange to psRange to normalize across all models
         #Adjust Alphas for XOR and Corner for clarity of presentation
         if condition=='XOR':
             A = [[-.9,-.9],[-.65,-.65],[.65,.65],[.9,.9]]
@@ -238,4 +244,3 @@ for ci,condition in enumerate(conditions):
     #Save fig
     if saveplots:
         plt.savefig(os.path.join(cur_dir,'firstbetas_{}.pdf'.format(condition)),bbox_inches='tight')
-    

@@ -7,7 +7,7 @@ np.set_printoptions(precision = 2)
 pd.set_option('display.precision', 2)
 os.chdir(sys.path[0])
 
-exec(open('Imports.py').read())
+exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
 import Modules.Funcs as funcs
 
 # import data
@@ -54,7 +54,7 @@ def plotlines(h, data, stats):
 			fillstyle = 'full',
 			markeredgecolor = condition_colors[g],
 			color = condition_colors[g],
-			alpha = 1)		
+			alpha = 1)
 		n += 1
 
 
@@ -77,4 +77,3 @@ plotlines(fh.gca(), df, stats)
 
 fh.savefig('yranges.pdf', bbox_inches = 'tight')
 fh.savefig('yranges.png', bbox_inches = 'tight')
-

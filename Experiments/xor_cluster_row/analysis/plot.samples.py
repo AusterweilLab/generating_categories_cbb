@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import sys
 os.chdir(sys.path[0])
 
-exec(open('Imports.py').read())
+exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
 import Modules.Funcs as funcs
 
 pd.set_option('display.precision', 2)
@@ -58,10 +58,10 @@ fig, ax= plt.subplots(3,11, figsize=np.array([7.,2.3]) , gridspec_kw = gridspec_
 ax_flat = ax.flatten()
 for i, h in enumerate(ax_flat):
 
-	if i in assignments['empty']: 
+	if i in assignments['empty']:
 		h.axis('off')
 		continue
-	
+
 
 	# get condition
 	# get participant
@@ -82,4 +82,3 @@ fig.savefig('samples.pdf', bbox_inches='tight', transparent=False)
 
 # path = '../../../Manuscripts/cog-psych/figs/e1-samples.pgf'
 # funcs.save_as_pgf(fig, path)
-

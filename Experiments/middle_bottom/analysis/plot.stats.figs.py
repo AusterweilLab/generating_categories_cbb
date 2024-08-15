@@ -10,7 +10,7 @@ os.chdir(sys.path[0])
 
 pd.set_option('display.width', 1000, 'display.precision', 2, 'display.max_rows', 999)
 
-exec(open('Imports.py').read())
+exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
 import Modules.Funcs as funcs
 
 # import data
@@ -28,8 +28,8 @@ fh, axes = plt.subplots(1,3,figsize = (7.5,2.5))
 
 for i, col in enumerate(['xrange','yrange','correlation']):
 	ax = axes[i]
-	hs = sns.boxplot(x = 'condition', y = col, data= stats, ax = ax,  
-		order = ['Bottom', 'Middle'])
+	hs = sns.boxplot(x = 'condition', y = col, data= stats, ax = ax,
+		order = ['Bottom', 'Middle'], palette = sns.color_palette())
 
 	ax.set_title(col, fontsize = 12)
 	ax.set_ylabel('')

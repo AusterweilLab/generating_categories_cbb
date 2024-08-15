@@ -6,7 +6,7 @@ import seaborn as sns
 sns.set_style("whitegrid")
 os.chdir(sys.path[0])
 
-exec(open('Imports.py').read())
+exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
 import Modules.Funcs as funcs
 
 # import data
@@ -42,7 +42,7 @@ for i, (j, rows) in enumerate(stats.groupby('condition')):
 	ax.set_title(j, fontsize = 14)
 	ax.set_xlabel('X Axis Range', fontsize = 12)
 	if i==0:	ax.set_ylabel('Y Axis Range', fontsize = 12)
-	
+
 	ax.axis([-0.2,2.2,-0.2,2.2])
 	ax.set_xticklabels('')
 	ax.set_yticklabels('')
@@ -51,4 +51,3 @@ for i, (j, rows) in enumerate(stats.groupby('condition')):
 
 f.subplots_adjust(wspace=0.1)
 f.savefig('rangescatter.pdf', bbox_inches='tight', transparent=False)
-

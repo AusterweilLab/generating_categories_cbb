@@ -16,45 +16,46 @@ class Trialset(object):
     A class representing a collection of trials
         Data (i.e., responses) is saved in a list Set
     """
-        
+
     def __init__(self, stimuli):
-        
-        # figure out what the stimulus domain is        
+
+        # figure out what the stimulus domain is
         self.stimuli = stimuli
         self.stimrange,self.stimstep = funcs.getrange(stimuli)
-                
+
         # initialize trials list
-        self.Set = [] # compact set
+        self.responses = [] # compact set
         self.nunique = 0
         self.nresponses = 0
         self.task = ''
         self.nparticipants = 0
         self.participants = []
-                
+
     def __str__(self):
-        S  = 'Trialset containing: ' 
+        S  = 'Trialset containing: '
         S += '\n\t ' + str(self.nunique) + ' unique trials '
         S += '\n\t ' + str(self.nresponses) + ' total responses'
                 # S += '\nTask: ' + self.task
+        S += '\n    Attributes:\n\t' + '\n\t'.join(list(vars(self).keys()))
         return S
 
     def _update(self):
-        self.nunique = len(self.Set)
-        self.nresponses = sum([len(i['response']) for i in self.Set])
- 
+        self.nunique = len(self.responses)
+        self.nresponses = sum([len(i['response']) for i in self.responses])
+
     def add(self, response, categories = [], participant = [], wrap_ax = None):
         """Add a single trial to the trial lists
-                
+
         If response variable is a scalar (responseType=1), then add response to only one
         category. If response variable is a 2-element list (responseType=2), then add the
         value of the first element to the category specified by the
         second element.
-        
+
         Also add participant information and if axis needs to be wrapped(if available)
-        
+
         030819 Gonna phase out type 1 responseTypes, since type 2 is more general.
         """
-        
+
         if type(response) is not list:
             add2cat = None
             responseType = 1
@@ -63,14 +64,14 @@ class Trialset(object):
             if len(response) == 2:
                 add2cat = response[1]
                 responseType = 2
-                response = response[0]                                
+                response = response[0]
             else:
                 raise ValueError('The "response" variable needs',\
                                  'to be either a single number,',\
                                  'or a a list containing',\
                                  'only 2 elements.')
 
-            
+
         #Force wrap_ax to be int or None
         if hasattr(wrap_ax,'__len__'):
             if len(wrap_ax)==0:
@@ -85,10 +86,10 @@ class Trialset(object):
         idx = self._lookup(categories)
         # if there is no existing configuration, add a new one
         if idx is None:
-            self.nunique += 1            
+            self.nunique += 1
             if responseType == 1:
-                self.Set.append(dict(
-                    response = np.array([response]), 
+                self.responses.append(dict(
+                    response = np.array([response]),
                     categories = categories,
                     participant = np.array([participant]),
                     wrap_ax = np.array([wrap_ax])
@@ -105,8 +106,8 @@ class Trialset(object):
                 respList[add2cat] = np.append(respList[add2cat],response)
                 pList[add2cat] = np.append(pList,participant)
                 wrapList[add2cat] = np.append(wrapList,wrap_ax)
-                
-                self.Set.append(dict(
+
+                self.responses.append(dict(
                     response = respList,
                     categories = categories,
                     participant = pList,
@@ -116,27 +117,27 @@ class Trialset(object):
         # if there is an index, just add the response
         else:
             if responseType == 1:
-                self.Set[idx]['response'] = np.append(
-                    self.Set[idx]['response'], response)
-                self.Set[idx]['participant'] = np.append(
-                    self.Set[idx]['participant'], participant)
-                self.Set[idx]['wrap_ax'] = np.append(
-                    self.Set[idx]['wrap_ax'], wrap_ax)
+                self.responses[idx]['response'] = np.append(
+                    self.responses[idx]['response'], response)
+                self.responses[idx]['participant'] = np.append(
+                    self.responses[idx]['participant'], participant)
+                self.responses[idx]['wrap_ax'] = np.append(
+                    self.responses[idx]['wrap_ax'], wrap_ax)
             elif responseType == 2:
                 #ncat = len(categories)
-                #if add2cat==ncat:                
-                if add2cat==len(self.Set[idx]['response']):
+                #if add2cat==ncat:
+                if add2cat==len(self.responses[idx]['response']):
                     categories += [np.array([])]
-                    self.Set[idx]['response'] += [np.array([])]
-                    self.Set[idx]['participant'] += [np.array([])]
-                    self.Set[idx]['wrap_ax'] += [np.array([])]
+                    self.responses[idx]['response'] += [np.array([])]
+                    self.responses[idx]['participant'] += [np.array([])]
+                    self.responses[idx]['wrap_ax'] += [np.array([])]
 
-                self.Set[idx]['response'][add2cat] = np.append(
-                    self.Set[idx]['response'][add2cat],response)
-                self.Set[idx]['participant'][add2cat] = np.append(
-                    self.Set[idx]['participant'][add2cat],participant)
-                self.Set[idx]['wrap_ax'][add2cat] = np.append(
-                    self.Set[idx]['wrap_ax'][add2cat],wrap_ax)
+                self.responses[idx]['response'][add2cat] = np.append(
+                    self.responses[idx]['response'][add2cat],response)
+                self.responses[idx]['participant'][add2cat] = np.append(
+                    self.responses[idx]['participant'][add2cat],participant)
+                self.responses[idx]['wrap_ax'][add2cat] = np.append(
+                    self.responses[idx]['wrap_ax'][add2cat],wrap_ax)
 
                 #self.Set[idx]['response'][add2cat] = np.append(
                 #        self.Set[idx]['response'][add2cat],response)
@@ -156,21 +157,21 @@ class Trialset(object):
 
         # increment response counter
         self.nresponses += 1
-                
+
     def _lookup(self, categories):
         """
             Look up if a category set is already in the compact set.
             return the index if so, return None otherwise
         """
 
-        for idx, trial in enumerate(self.Set):
+        for idx, trial in enumerate(self.responses):
 
-            # if the categories are not the same size, then they are 
+            # if the categories are not the same size, then they are
             # not equal...
             #if len(categories) != len(trial['categories']): continue
 
             # check equality of all pairs of categories
-            equals =[np.array_equal(*arrs) 
+            equals =[np.array_equal(*arrs)
                      for arrs in zip(categories, trial['categories'])]
 
             # return index if all pairs are equal
@@ -182,13 +183,13 @@ class Trialset(object):
 
     def cat2ind(self,catlabel):
         category_list = ['Alpha','Beta','Gamma','Delta']
-        treatAsBetas = [None,'Not-Alpha','Alpha']  #Legacy support        
+        treatAsBetas = [None,'Not-Alpha','Alpha']  #Legacy support
         if catlabel in treatAsBetas:
             out = 1
         else:
-            out = category_list.index(catlabel)                
+            out = category_list.index(catlabel)
         return out
-    
+
     def add_frame(self, generation, task = 'generate'):
         """
         Add trials from a dataframe
@@ -200,14 +201,14 @@ class Trialset(object):
                 participant, trial, stimulus, assignment, categories
 
         Where categories is a embedded list of known categories
-        PRIOR to trial = 0.               
-        """        
+        PRIOR to trial = 0.
+        """
         if task == 'generate':
             for pid, rows in generation.groupby('participant'):
                 for num, row in rows.groupby('trial'):
-                    categories = row.categories.item()[:] #gotta copy the list with [:]                    
+                    categories = row.categories.item()[:] #gotta copy the list with [:]
                     gen_exemplars = np.array(rows.loc[rows.trial<num, 'stimulus'].values)
-                    if 'category' in rows.columns:                    
+                    if 'category' in rows.columns:
                         gen_cats = rows.loc[rows.trial<num, 'category'].values
                         for gen_cat in np.unique(gen_cats):
                             gen_idc = np.array([gi for gi, gc in enumerate(gen_cats) if gc == gen_cat])
@@ -247,28 +248,30 @@ class Trialset(object):
         else:
             raise ValueError('Oh no, it looks like you have specified an illegal value for the task argument!')
 
-                
+
         return self
-                
-    
+
+
     def loglike(self, params, model, fixedparams = None, whole_array=False, parmxform = True,seedrng = False):
         """
         Evaluate a model object's log-likelihood on the
         trial set based on the provided parameters.
-                
+
         If whole_array is True, then loglike returns the nLL
-        of each trial in the Trialset. 
+        of each trial in the Trialset.
         """
-        
+        global ps_add
+        ps_add = np.array([])
+
         # reverse-transform parameter values
         if parmxform:
-            params = model.parmxform(params, direction = -1)        
+            params = model.parmxform(params, direction = -1)
 
         # extract fixed parameters and feed it into params variable
         if hasattr(fixedparams,'keys'):
             #convert free parms to dict
             params = model.params2dict(params)
-            for parmname in fixedparams.keys():
+            for parmname in list(fixedparams.keys()):
                 params[parmname] = fixedparams[parmname]
         #Get stimsteps, if it doesn't exist, compute and add as property
         if hasattr(self,'stimstep'):
@@ -283,7 +286,7 @@ class Trialset(object):
         # iterate over trials
         loglike = 0
         ps_list = np.array([])
-        #some older code has data pickles with no Task attribute 
+        #some older code has data pickles with no Task attribute
         if hasattr(self, 'task') is False:
             #default to generate
             self.task = 'generate'
@@ -295,7 +298,7 @@ class Trialset(object):
         # if self.task is '':
         #     raise Exception('Task for trialset object not defined.')
         task = self.task
-        for idx, trial in enumerate(self.Set):
+        for idx, trial in enumerate(self.responses):
             # format categories
             #170818 - uh oh, looks like this line doesn't correctly account for lists with [0]
             #Lists with [0] should be recognised as valid categories, and not empty
@@ -305,7 +308,7 @@ class Trialset(object):
             if hasattr(trial['response'][0], "__len__"):
                 responseType = 2
                 #Identify if any axis needs wrapping
-                if not 'wrap_ax' in trial.keys():
+                if not 'wrap_ax' in list(trial.keys()):
                     #Legacy support. If trialset doesn't have wrap_ax, then no wrapping is required.
                     #This shouldn't really happen, but just in case
                     trial['wrap_ax'] = []
@@ -319,11 +322,13 @@ class Trialset(object):
                     if wrap[0] is None:
                         wraps = [None]
                     else:
-                        wraps = np.unique(subwraps)
+                        # kesong: how to handle [1, None]?
+                        # assuming dropping all None objects
+                        wraps = np.unique(subwraps[subwraps != None])
             else:
                 responseType = 1
                 #Identify if any axis needs wrapping
-                if not 'wrap_ax' in trial.keys():
+                if not 'wrap_ax' in list(trial.keys()):
                     #Legacy support. If trialset doesn't have wrap_ax, then no wrapping is required.
                     trial['wrap_ax'] = np.array([None for i in range(len(trial['response']))])
                     wraps = [None]
@@ -356,7 +361,7 @@ class Trialset(object):
                                         ps_idx = ps_idx[0]
                                     respidx = np.array(resp[ps_idx],dtype=int)
                                     ps_add = np.append(ps_add,ps[respidx])
-                            
+
                 elif task=='assign':
                     if responseType==2 and len(trial['response'])>2:
                         raise Exception('Cannot handle assignment of multiple categories at this point.')
@@ -448,7 +453,7 @@ class Trialset(object):
                 if whole_array:
                     ps_list = np.append(ps_list,ps_add)
                 else:
-                    loglike += np.sum(np.log(ps_add))                        
+                    loglike += np.sum(np.log(ps_add))
 
         if whole_array:
             return -1.0 * np.log(ps_list)
@@ -459,10 +464,10 @@ class Trialset(object):
         """Returns the correlation between model generation fit and observed
         participant error. This functions extracts the data for each individual
         participant in the trialset object, computes the observed error from that
-        and calculates the model fit (negative LL) to that participant's data.        
+        and calculates the model fit (negative LL) to that participant's data.
 
         """
-        from scipy.stats import stats as ss        
+        from scipy.stats import stats as ss
         ppts = self.participants
         ppt_err_rate = []
         ll = []
@@ -470,11 +475,11 @@ class Trialset(object):
             pptTrialObj = extractPptData(self.ppt)
             nresp = 0.0
             nresp_correct = 0.0
-            for trial in pptTrialObj.Set:
+            for trial in pptTrialObj.responses:
                 correctcats = trial['categories']
                 #Iterate over each category
                 for i,correctcat in enumerate(correctcats):
-                    #update number of responses                    
+                    #update number of responses
                     nresp += len(trial['response'][i])
                     for correct in correctcat:
                         nresp_correct += trial['response'][i].count(correct)
@@ -483,7 +488,7 @@ class Trialset(object):
             ll += [pptTrialObj.loglike(params, model,seedrng=seedrng)]
         correlation = ss.pearsonr(ppt_err_rate,ll)
 
-        
+
 def hillclimber(model_obj, trials_obj, options, fixedparams = None, inits = None, results = True,callbackstyle='none', seed=None):
     """
     Run an optimization routine.
@@ -507,14 +512,14 @@ def hillclimber(model_obj, trials_obj, options, fixedparams = None, inits = None
     callback = callbackstyle
     global itcount
     global fitLL
-    global seedrng    
+    global seedrng
     fitLL = True
     seedrng = seed
     # set initial params
-    if inits is None:    
+    if inits is None:
         inits = model_obj.rvs(fmt = list) #returns random parameters as list
         if results:
-            print('\nStarting parms (randomly selected):')
+            print('\nStarting params (randomly selected):')
             print(inits)
     #transform inits to be bounded within rules
     inits = model_obj.parmxform(inits, direction = 1)
@@ -522,30 +527,30 @@ def hillclimber(model_obj, trials_obj, options, fixedparams = None, inits = None
     itcount = 0
     if results:
         print('Fitting: ' + model_obj.model)
-                
-    res = op.minimize(    trials_obj.loglike, 
-                inits, 
+
+    res = op.minimize(    trials_obj.loglike,
+                inits,
                 args = (model_obj,fixedparams),
-                callback = _callback_fun_, 
+                callback = _callback_fun_,
                 **options
         )
     #reverse-transform the parms
     res.x = model_obj.parmxform(res.x, direction = -1)
-        
+
     # print results
     if results:
         print('\n' + model_obj.model + ' Results:')
         print('\tIterations = ' + str(res.nit))
         print('\tMessage = ' + str(res.message))
-        
+
         X = model_obj.params2dict(model_obj.clipper(res.x))
-        for k, v in X.items():
+        for k, v in list(X.items()):
             print('\t' + k + ' = ' + str(v) + ',')
-            
-        print('\tLogLike = ' + str(res.fun))    
+
+        print('\tLogLike = ' + str(res.fun))
         AIC = funcs.aic(res.fun,len(inits))
         print('\tAIC = ' + str(AIC))
-                        
+
     return res
 
 def hillclimber_corr(model_obj, pptdata, tso, options, fixedparams = None, inits = None, results = True,callbackstyle='none',pearson=True):
@@ -576,13 +581,13 @@ def hillclimber_corr(model_obj, pptdata, tso, options, fixedparams = None, inits
     global fitLL
     global seedrng
     fitLL = False
-    execfile('Imports.py')
+    exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
     import Modules.Funcs as funcs
     # set initial params
-    if inits is None:    
+    if inits is None:
         inits = model_obj.rvs(fmt = list) #returns random parameters as list
         if results:
-            print('\nStarting parms (randomly selected):')
+            print('\nStarting params (randomly selected):')
             print(inits)
     #transform inits to be bounded within rules
     inits = model_obj.parmxform(inits, direction = 1)
@@ -590,30 +595,30 @@ def hillclimber_corr(model_obj, pptdata, tso, options, fixedparams = None, inits
     itcount = 0
     if results:
         print('Fitting: ' + model_obj.model)
-                
-    res = op.minimize(funcs.get_corr, 
-                inits, 
+
+    res = op.minimize(funcs.get_corr,
+                inits,
                 args = (pptdata,tso,model_obj,fixedparams,pearson),
-                callback = _callback_fun_, 
+                callback = _callback_fun_,
                 **options
         )
     #reverse-transform the parms
     res.x = model_obj.parmxform(res.x, direction = -1)
-        
+
     # print results
     if results:
         print('\n' + model_obj.model + ' Results:')
         print('\tIterations = ' + str(res.nit))
         print('\tMessage = ' + str(res.message))
-        
+
         X = model_obj.params2dict(model_obj.clipper(res.x))
-        for k, v in X.items():
+        for k, v in list(X.items()):
             print('\t' + k + ' = ' + str(v) + ',')
-            
-        print('\tLogLike = ' + str(res.fun) )        
+
+        print('\tLogLike = ' + str(res.fun) )
         AIC = funcs.aic(res.fun,len(inits))
         print('\tAIC = ' + str(AIC))
-                        
+
     return res
 
 
@@ -631,33 +636,33 @@ def _callback_fun_(xk):
     else:
         model_obj,pptdata,tso,display = _fetch_global_(fitLL)
     #Set how many columns to print
-    printcol = 20 
-    if display is 'iter':
+    printcol = 20
+    if display == 'iter':
         if fitLL:
-            fit = trials_obj.loglike(xk,model_obj,seedrng = seedrng)                
+            fit = trials_obj.loglike(xk,model_obj,seedrng = seedrng)
         else:
-            execfile('Imports.py')
+            exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
             import Modules.Funcs as funcs
             fit = funcs.get_corr(xk,pptdata,tso,model_obj,print_on=False) #220618 hmm not entirely sure if this works but can try
         xk = model_obj.parmxform(xk, direction = -1)
         print('\t[' + ', '.join([str(round(i,4)) for i in xk]) + '] f(x) = ' + str(round(fit,4)) )
-    elif display is '.':                
+    elif display == '.':
         if (np.mod(itcount,printcol)!=0) & (itcount>0):
-            print('\b.')
+            print('.', end='')
             sys.stdout.flush()
         elif (itcount>0):
-            print('\b.')
+            print('\b'*printcol+'.', end='')
 
-                        
+
                 #print '\t[' + ', '.join([str(round(i,4)) for i in xk]) + ']'
-    elif display is 'none':
+    elif display == 'none':
         pass
     elif type(display) is str:
         if np.mod(itcount,printcol)==0 & itcount>0:
             eval('print ' + display)
         else:
             eval('print ' + '\b' +  display)
-            
+
 
     itcount += 1
 
@@ -680,27 +685,27 @@ def show_final_p(model_obj, trial_obj, params, show_data = False):
     #One final presentation of the set of probabilities for each stimulus
     task = trial_obj.task
     nstim = len(trial_obj.stimuli)
-    for idx, trial in enumerate(trial_obj.Set):
+    for idx, trial in enumerate(trial_obj.responses):
         # format categories
         #categories = [trial_obj.stimuli[i,:] for i in trial['categories'] if any(i)]
         categories = [trial_obj.stimuli[i,:] for i in trial['categories'] if len(i)>0]
         ps0 = model_obj(categories, params, trial_obj.stimrange).get_generation_ps(trial_obj.stimuli, 0,trial_obj.task,seedrng = seedrng)
         ps1 = model_obj(categories, params, trial_obj.stimrange).get_generation_ps(trial_obj.stimuli, 1,trial_obj.task,seedrng = seedrng)
-        
-        
+
+
         if show_data is False:
             print('Model Predictions:')
             dsize = int(np.sqrt(len(ps0)))
             print(np.atleast_2d(ps0).reshape(dsize,-1))
             print(np.atleast_2d(ps1).reshape(dsize,-1))
-        else:                        
+        else:
             dsize = int(np.sqrt(len(ps0)))
             cat0ct = []
             cat1ct = []
             cat0pt = []
             cat1pt = []
-            
-            responses = trial['response']                        
+
+            responses = trial['response']
             for j in range(nstim):#max(responses[0])+1):
                 cat0 = sum(np.array(responses[0])==j)
                 cat1 = sum(np.array(responses[1])==j)
@@ -711,16 +716,16 @@ def show_final_p(model_obj, trial_obj, params, show_data = False):
                 p1 = 1-p0
                 cat0pt += [p0]
                 cat1pt += [p1]
-                
+
                 sse = sum((np.array(ps0)-np.array(cat0pt))**2 + \
                           (np.array(ps1)-np.array(cat1pt))**2)
-                
+
                 cat0pt = [round(i,4) for i in cat0pt]
                 cat1pt = [round(i,4) for i in cat1pt]
-                
+
                 ps0 = [round(i,4) for i in ps0]
                 ps1 = [round(i,4) for i in ps1]
-                
+
                 print('Condition ' + str(idx))
                 print('SSE = ' + str(sse))
                 print('Model Predictions (Cat0):')
@@ -731,7 +736,7 @@ def show_final_p(model_obj, trial_obj, params, show_data = False):
                 # print np.flipud(np.atleast_2d(ps1).reshape(dsize,-1))
                 # print 'Observed Data (Cat1):'
                 # print np.flipud(np.atleast_2d(cat1pt).reshape(dsize,-1))
-                
+
                 #lll
                 #print ps0
                 #print ps1
@@ -746,16 +751,16 @@ def extractPptData(trial_obj, ppt = 'all', unique_trials = 'all'):
     Extracts data for a single participant (or range of participants, if it's a list)
     from a trialset object. Can also extract specific unique trials (aka
     trained category stimuli).
-    
+
     If unique_trials is set to 'all', then all unique trials are included.
-    
+
     Returns a trialset object
     """
     import copy as cp
     if ppt != 'all' and type(ppt) is not list:
-        ppt = [ppt]        
+        ppt = [ppt]
     output_obj = cp.deepcopy(trial_obj)
-    if unique_trials is not 'all':
+    if unique_trials != 'all':
         #check for the type of input
         if not hasattr(unique_trials,'__len__'):
             #scalars don't have this attr
@@ -767,33 +772,33 @@ def extractPptData(trial_obj, ppt = 'all', unique_trials = 'all'):
             #extract only trials that match these unique trials
             #Only handles one idx at a time for now 130218
             idx = trial_obj._lookup(unique_trials)
-                        
+
         if idx is None:
             S = 'Specified set of unique trials not found in trial set.'
             raise Exception(S)
         #Remove all unique trials except the selected one
         if isinstance(idx,list):
-            temp_obj = [chunk for i,chunk in enumerate(trial_obj.Set) if i in idx]
-            output_obj.Set = []
-            output_obj.Set = [chunk for chunk in temp_obj]
+            temp_obj = [chunk for i,chunk in enumerate(trial_obj.responses) if i in idx]
+            output_obj.responses = []
+            output_obj.responses = [chunk for chunk in temp_obj]
         else:
-            temp_obj = trial_obj.Set[idx]                        
-            output_obj.Set = []
-            output_obj.Set.append(temp_obj)
+            temp_obj = trial_obj.responses[idx]
+            output_obj.responses = []
+            output_obj.responses.append(temp_obj)
     #Check responseType
-    if hasattr(output_obj.Set[0]['response'][0], "__len__"):
+    if hasattr(output_obj.responses[0]['response'][0], "__len__"):
         responseType = 2
     else:
         responseType = 1
-        
-    for ti,trialchunk in enumerate(output_obj.Set):        
+
+    for ti,trialchunk in enumerate(output_obj.responses):
         responsecats = trialchunk['response']
         pptcats = trialchunk['participant']
         wrapaxcats = trialchunk['wrap_ax']
         respList = np.array([])
         pptList = np.array([])
         wrapaxList = np.array([])
-        if trial_obj.task is 'generate':
+        if trial_obj.task == 'generate':
             if responseType==1:
                 #convert pptcat and responsecat to array for easier indexing
                 if ppt == 'all':
@@ -813,10 +818,10 @@ def extractPptData(trial_obj, ppt = 'all', unique_trials = 'all'):
                 ncategories = len(trialchunk['participant'])
                 # if not 'xrange' in locals():
                 #     xrange = np.unique(trial_obj.stimuli[:,0])
-                #iterate over categories of responses        
+                #iterate over categories of responses
                 respList = [np.array([], dtype = int) for _ in range(ncategories)]
                 pptList = [np.array([], dtype = int) for _ in range(ncategories)]
-                wrapaxList = [np.array([], dtype = int) for _ in range(ncategories)]        
+                wrapaxList = [np.array([], dtype = int) for _ in range(ncategories)]
                 for pi,pptcat in enumerate(pptcats):
                     #convert pptcat and responsecat to array for easier indexing
                     responsecat = np.array(responsecats[pi])
@@ -832,12 +837,12 @@ def extractPptData(trial_obj, ppt = 'all', unique_trials = 'all'):
                             respList[pi] = np.append(respList[pi],responsecat[extractIdx])
                             pptList[pi] = np.append(pptList[pi],pptcat[extractIdx])
                             wrapaxList[pi] = np.append(wrapaxList[pi],wrapaxcat[extractIdx])
-                
-        elif trial_obj.task is 'assign' or trial_obj.task is 'error':
-            #iterate over categories of responses        
+
+        elif trial_obj.task == 'assign' or trial_obj.task == 'error':
+            #iterate over categories of responses
             respList = [np.array([], dtype = int) for _ in range(ncategories)]
             pptList = [np.array([], dtype = int) for _ in range(ncategories)]
-            wrapaxList = [np.array([], dtype = int) for _ in range(ncategories)]        
+            wrapaxList = [np.array([], dtype = int) for _ in range(ncategories)]
             for pi,pptcat in enumerate(pptcats):
                 #convert pptcat and responsecat to array for easier indexing
                 responsecat = np.array(responsecats[pi])
@@ -855,38 +860,38 @@ def extractPptData(trial_obj, ppt = 'all', unique_trials = 'all'):
                         wrapaxList[pi] = np.append(wrapaxList[pi],wrapaxcat[extractIdx])
         else:
             raise ValueError('trialset.task not specified. Please specify this as \'generate\' or \'assign\' in your script.')
-        
-        output_obj.Set[ti]['response'] = respList
-        output_obj.Set[ti]['participant'] = pptList
-        output_obj.Set[ti]['wrap_ax'] = wrapaxList
+
+        output_obj.responses[ti]['response'] = respList
+        output_obj.responses[ti]['participant'] = pptList
+        output_obj.responses[ti]['wrap_ax'] = wrapaxList
     #Clean up
     #cleanIdx = np.ones(len(output_obj.Set),dtype=bool)
-    output_objTemp = cp.deepcopy(output_obj.Set)
-    output_obj.Set = []
+    output_objTemp = cp.deepcopy(output_obj.responses)
+    output_obj.responses = []
     for ti,trialchunk in enumerate(output_objTemp):
-        if trial_obj.task is 'generate':
+        if trial_obj.task == 'generate':
             if responseType==1:
-                if len(trialchunk['participant'])>0:                        
+                if len(trialchunk['participant'])>0:
                     #cleanIdx[ti] = False
-                    output_obj.Set.append(trialchunk)
+                    output_obj.responses.append(trialchunk)
             elif responseType==2:
                 size = 0
                 for trialppt in trialchunk['participant']:
                     size += len(trialppt)
-                if size>0:                        
+                if size>0:
                     #cleanIdx[ti] = False
-                    output_obj.Set.append(trialchunk)
-                    
-        elif trial_obj.task is 'assign' or trial_obj.task is 'error':
-            if len(trialchunk['participant'][0])>0:                        
+                    output_obj.responses.append(trialchunk)
+
+        elif trial_obj.task == 'assign' or trial_obj.task == 'error':
+            if len(trialchunk['participant'][0])>0:
                 #cleanIdx[ti] = False
-                output_obj.Set.append(trialchunk)
+                output_obj.responses.append(trialchunk)
 
     #Finally, update the unique participant list
     if not ppt=='all':
         output_obj.participants = ppt
         output_obj.nparticipants = len(ppt)
-        
+
     return output_obj
 
 def loglike_allperm(params, model_obj, categories, stimuli, permute_category = 1,
@@ -900,7 +905,7 @@ def loglike_allperm(params, model_obj, categories, stimuli, permute_category = 1
                     'categories yet. To fix this, go bug Xian or do it yourself.')
 
     import pandas as pd
-    import math    
+    import math
     cat2perm = categories[permute_category]
     cat2notperm = categories[1-permute_category]
 
@@ -970,14 +975,14 @@ def loglike_allperm(params, model_obj, categories, stimuli, permute_category = 1
 #                                                              'determinism']
 #                 with open(pickledir+file,'wb') as f:
 #                         pickle.dump(fulldata,f)
-                                
+
 
 # def print_gs_nicenice():
-#         #Find all gs fits and print them. Nice nice.        
+#         #Find all gs fits and print them. Nice nice.
 #         import re
 #         import os
 #         import pickle
-        
+
 #         pickledir = 'pickles/'
 #         prefix = 'gs_'
 #         #Compile regexp obj
@@ -998,5 +1003,3 @@ def loglike_allperm(params, model_obj, categories, stimuli, permute_category = 1
 #                                 print '\t' + pname + ': ' + str(fulldata[j]['bestparmsll'][pi])
 #                         print '\tLogLike' + ' = ' + '-' + str(fulldata[j]['bestparmsll'][pi+1])
 #                         print '\tAIC'  + ' = ' + str(fulldata[j]['bestparmsll'][pi+2])
-
-

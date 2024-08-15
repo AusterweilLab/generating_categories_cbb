@@ -9,7 +9,7 @@ colors = ["#34495e", "#e74c3c"]
 sns.set_palette(colors)
 os.chdir(sys.path[0])
 
-exec(open('Imports.py').read())
+exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
 import Modules.Funcs as funcs
 
 # import data
@@ -34,7 +34,12 @@ for c in pd.unique(info.condition):
 	for i in range(stimuli.shape[0]):
 		count = sum((generation.condition == c) & (generation.stimulus ==i))
 		row = dict(condition = c, stimulus = i, count = count)
-		ngenerations = ngenerations.append(row, ignore_index = True)
+		# ngenerations = ngenerations.append(row, ignore_index = True)
+		ngenerations = pd.concat([
+			    ngenerations,
+			    pd.DataFrame([row])
+			], ignore_index = True
+        )
 
 
 # fh, ax = plt.subplots(1,2,figsize = (6,2.7))
@@ -91,7 +96,7 @@ h.set_xticks([])
 h.set_yticks([])
 
 h.axis([0, 1.5, 0, 1.5])
-# h.legend(loc = 'upper right', frameon = True, framealpha = 1, 
+# h.legend(loc = 'upper right', frameon = True, framealpha = 1,
 # 	ncol = 2, columnspacing = 0.1, labelspacing = 0.1, fontsize = main_font)
 h.set_xlabel('Within-Category Distance',fontsize = main_font)
 h.set_ylabel('Between-Category Distance',fontsize = main_font)
@@ -103,5 +108,3 @@ fh.subplots_adjust(wspace=0.3)
 fname = 'distance.figs'
 fh.savefig(fname + '.pdf', bbox_inches = 'tight', pad_inches=0.0, transparent = True)
 fh.savefig(fname + '.png', bbox_inches = 'tight', pad_inches=0.0, transparent = True)
-
-		

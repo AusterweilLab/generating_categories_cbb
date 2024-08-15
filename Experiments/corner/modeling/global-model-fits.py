@@ -10,7 +10,8 @@ def compile_file(filename):
 	with open(filename, encoding='utf-8') as f:
 		return compile(f.read(), filename, 'exec')
 
-cur_dir = 'Experiments/corner/modeling'
+# cur_dir = 'Experiments/corner/modeling'
+cur_dir = ''
 
 exec(compile_file(os.path.join(cur_dir,'Imports.py')))
 
@@ -38,7 +39,7 @@ options = dict(
 	method = 'Nelder-Mead',
 	options = dict(maxiter = 500, disp = False),
 	tol = 0.01,
-) 
+)
 
 results = dict()
 for model_obj in [ConjugateJK13, CopyTweak, Packer]:

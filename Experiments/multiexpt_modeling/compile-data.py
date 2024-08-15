@@ -4,12 +4,11 @@
 import pandas as pd
 import sqlite3
 
-pd.set_option('display.width', 200, 'precision', 2)
+pd.set_option('display.width', 200, 'display.precision', 2)
 
-
-databases = [ '../xor-cluster-row/data/experiment.db',
-                            '../middle-bottom/data/experiment.db'
-                        ]
+databases = [ '../xor_cluster_row/data/experiment.db',
+              '../middle_bottom/data/experiment.db'
+]
 
 # KEEP:
 keep_tables = [
@@ -28,9 +27,9 @@ for num, dbpath in enumerate(databases):
     with sqlite3.connect(dbpath) as con:
         data = dict((T, pd.read_sql('SELECT * FROM ' + T, con)) for T in keep_tables)
 
-        
+
     # get the stimuli df, init the alphas
-    if num == 0: 
+    if num == 0:
         stimuli = data['stimuli']
         alphas  = data['alphas']
 
@@ -40,7 +39,8 @@ for num, dbpath in enumerate(databases):
 
     # update condition mapping
     rows = [ dict(condition=i, experiment=num) for i in data['alphas'].columns ]
-    experiments = experiments.append(rows, ignore_index = True)
+    # experiments = experiments.append(rows, ignore_index = True)
+    experiments = pd.concat([experiments, pd.DataFrame(rows)], ignore_index = True)
 
     # remap participant IDs
     data['participants']['original_pid'] = data['participants'].participant
@@ -56,7 +56,7 @@ for num, dbpath in enumerate(databases):
             table_idx = T.participant == orig
             new = P.loc[P.original_pid==orig, 'participant']
             T.loc[table_idx, 'participant'] = list(new)[0]
-    
+
 
     # init df or append rows
     if num == 0:
@@ -79,7 +79,7 @@ original_pids = participants[['participant', 'original_pid', 'experiment']]
 
 # remove irrelevant cols from various dfs
 participants.drop(['start','finish','counterbalance','lab','original_pid'],
-		axis = 1, inplace=True)
+    axis = 1, inplace=True)
 generation.drop(['rt'], axis = 1, inplace=True)
 betastats.drop(['bottom_only','bottom_used','top_and_bottom','top_only','top_used'],
     axis = 1, inplace=True)
@@ -94,4 +94,3 @@ stimuli.to_sql(       'stimuli',       con, index = False, if_exists = 'replace'
 alphas.to_sql(        'alphas',        con, index = False, if_exists = 'replace')
 betastats.to_sql(     'betastats',     con, index = False, if_exists = 'replace')
 con.close()
-

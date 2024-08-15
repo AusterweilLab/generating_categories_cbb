@@ -2,7 +2,7 @@ import pickle
 import pickle_compat
 import pandas as pd
 import os
-print(os.getcwd())
+print((os.getcwd()))
 
 #originally in Python 2. Converted to 3, so pickles need special attention
 pickle_compat.patch()
@@ -11,8 +11,9 @@ from io import open
 def compile_file(filename):
 	with open(filename, encoding='utf-8') as f:
 		return compile(f.read(), filename, 'exec')
-	
-cur_dir = 'Experiments/middle_bottom/modeling/'
+
+# cur_dir = 'Experiments/middle_bottom/modeling/'
+cur_dir = ''
 exec(compile_file(os.path.join(cur_dir,'Imports.py')))
 
 import Modules.Funcs as funcs
@@ -45,7 +46,7 @@ options = dict(
 	method = 'Nelder-Mead',
 	options = dict(maxiter = 500, disp = False),
 	tol = 0.01,
-) 
+)
 
 results = dict()
 for model_obj in [ConjugateJK13, CopyTweak, Packer]:
@@ -58,5 +59,5 @@ for model_obj in [ConjugateJK13, CopyTweak, Packer]:
 # with open(dst,'wb') as f:
 # 	pickle.dump(results, f)
 
-for k,v in results.items():
-	print(k, v)
+for k,v in list(results.items()):
+	print((k, v))

@@ -27,11 +27,11 @@ if 'condition' in testconds:
     savestr += 'cond'
 if 'condcomb' in testconds:
     savestr += 'comb'
-    
+
 pd.set_option('display.width', 1000, 'display.precision', 2, 'display.max_rows', 999)
 
 
-exec(open('Imports.py').read())
+exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
 import Modules.Funcs as funcs
 
 # import data
@@ -142,14 +142,14 @@ for i, col in enumerate(['xrange','yrange','correlation','area']):
             ax = axes[ii,i]
         else:
             ax = axes.flat[i]
-        hs = sns.violinplot(x = conditions, y = col, data= stats, ax = ax, 
-                        order = order[conditions])
+        hs = sns.violinplot(x = conditions, y = col, data= stats, ax = ax,
+                        order = order[conditions], palette = sns.color_palette())
         ax.set_title(col, fontsize = 12)
         ax.set_ylabel('')
         xvals = ax.get_xticks()
         if plot_alpha and not conditions=='gentype':
             #build stats alpha
-            yvals = []                
+            yvals = []
             for sa in stats_alpha:
                 if conditions=='condition':
                     yvals += [sa[col]]
@@ -174,7 +174,7 @@ for i, col in enumerate(['xrange','yrange','correlation','area']):
             ax.set_title('Area', fontsize = 12)
             #ax.set_yticks([-1,-0.5,0,0.5,1])
             #ax.set_yticklabels(['-1','-0.5','0','0.5','1'])
-            
+
         ax.tick_params(labelsize = 11)
         ax.set_xlabel('')
         ax.xaxis.grid(False)
@@ -204,7 +204,7 @@ def print_ttest(g1, g2, fun):
     print(S)
     with open(savetext,'a') as f:
         f.write(S+'\n')
-    
+
 pstr = '\n---- Corner_S X vs. Y:'
 print(pstr)
 with open(savetext,'a') as f:
@@ -249,7 +249,7 @@ for stats_interest in stats_interests:
         # with open(savetext,'a') as f:
         #     f.write(pstr+'\n')
         # d = [stats.loc[stats_interest==statsi,j] for statsi in pd.unique(stats_interest)]
-        # f,p = f_oneway(d[0],d[1],d[2])#Note this needs to account for number of levels, not fix it at 3. 
+        # f,p = f_oneway(d[0],d[1],d[2])#Note this needs to account for number of levels, not fix it at 3.
         # pstr =  'F = {}, p = {}'.format(f,p)
         # print pstr
         # with open(savetext,'a') as f:
@@ -269,11 +269,11 @@ for stats_interest in stats_interests:
             data1 = stats.loc[stats_interest==g1,j]
             data2 = stats.loc[stats_interest==g2,j]
             ttest_res = ttest_ind(data1,data2)
-            N = len(data1) + len(data2)            
+            N = len(data1) + len(data2)
             ts += [ttest_res.statistic]
             dfs += [N-2] #2 groups
             BF01s += [BFtt(N,ttest_res.statistic)]
-            
+
         resstr = str(res)
         #add p-values and Bayes Factors to print
         resstr = resstr.replace('reject', 'reject   p     t(df)    BF01   BF10')

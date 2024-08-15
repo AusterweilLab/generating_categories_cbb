@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 os.chdir(sys.path[0])
 
-exec(open('Imports.py').read())
+exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
 import Modules.Funcs as funcs
 
 
@@ -20,11 +20,11 @@ f, ax = plt.subplots(1, 2, figsize=(3.3, 1.5))
 
 for i, k  in enumerate(list(alphas)):
 	h = ax[i]
-	funcs.plotclasses(h, stimuli, alphas[k], [])		
+	funcs.plotclasses(h, stimuli, alphas[k], [])
 
 	h.axis(np.array([-1, 1, -1, 1])*1.25)
 	h.text(-1.1, 1.1, k, ha = 'left', va = 'top')
-	
+
 	# h.plot([-1,1],[-0.9,-0.9],'--',color='gray')
 	# h.plot([-1,1],[0.9,0.9],'--',color='gray')
 	# h.text(0.0,0.9,'Top',ha = 'center',va = 'bottom', color='gray')
