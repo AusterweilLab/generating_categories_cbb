@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import sys
 os.chdir(sys.path[0])
 
-exec(open('Imports.py').read())
+exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
 import Modules.Funcs as funcs
 
 pd.set_option('display.precision', 2)
@@ -29,7 +29,7 @@ for i, row in info.iterrows():
 	pbetas = df.stimulus[df.participant == pid]
 
 	funcs.plotclasses(ax, stimuli, palphas, pbetas)
-	
+
 	fname = os.path.join(savedir,condition + '-' + str(pid) + '.png')
 	f.savefig(fname, bbox_inches='tight', transparent=False)
 	plt.cla()

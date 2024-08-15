@@ -8,7 +8,7 @@ os.chdir(sys.path[0])
 
 np.set_printoptions(precision = 2)
 
-exec(open('Imports.py').read())
+exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
 import Modules.Funcs as funcs
 
 
@@ -29,7 +29,7 @@ for i, (K, rows) in enumerate(infodf.groupby('condition')):
 
 	pids = rows.participant
 	betas = generation.loc[generation.participant.isin(pids), 'stimulus']
-	
+
 	counts = np.array([sum(betas==j) for j in range(stimuli.shape[0])])
 	ps = counts / float(sum(counts))
 	g = funcs.gradientroll(ps,'roll')[:,:,0]
@@ -54,5 +54,3 @@ f.subplots_adjust(hspace=0.4)
 
 plt.draw()
 f.savefig('heatmaps.pdf', bbox_inches='tight', transparent=False)
-
-

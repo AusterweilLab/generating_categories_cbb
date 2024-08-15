@@ -11,7 +11,7 @@ pd.set_option('display.width', 1000)
 pd.set_option('display.precision', 2)
 
 
-exec(open('Imports.py').read())
+exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
 import Modules.Funcs as funcs
 
 # import data
@@ -26,7 +26,7 @@ fh, axes = plt.subplots(1,3,figsize = (7.5,2.5))
 
 for i, col in enumerate(['xrange','yrange','correlation']):
 	ax = axes[i]
-	sns.boxplot(x = 'condition', y = col, data= stats, ax = ax, 
+	sns.boxplot(x = 'condition', y = col, data= stats, ax = ax,
 				  order = ['Cluster', 'Row','XOR'])
 	ax.set_title(col, fontsize = 12)
 	ax.set_ylabel('')
