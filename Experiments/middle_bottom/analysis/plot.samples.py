@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 os.chdir(sys.path[0])
 
-exec(open('Imports.py').read())
+exec(compile(open('Imports.py', "rb").read(), 'Imports.py', 'exec'))
 import Modules.Funcs as funcs
 
 pd.set_option('display.precision', 2)
@@ -22,9 +22,9 @@ textsettings = dict(fontsize = 6)
 
 # ASSIGN SUBPLOTS TO CONDITIONS
 #  		 		MIDDLE   		 		 #      	  BOTTOM      		#
-#  0		 1		 2  	 3     4     5  	 6 	 	 7     8  
-#  9		10		11		12		13		14		15		16		17	
-# 18		19		20		21		22		23		24		25		26		
+#  0		 1		 2  	 3     4     5  	 6 	 	 7     8
+#  9		10		11		12		13		14		15		16		17
+# 18		19		20		21		22		23		24		25		26
 # CL		ROW		COL 	4C 					CL		ROW		COL 	4C
 
 assignments = {
@@ -51,10 +51,10 @@ fig, ax= plt.subplots(3,9, figsize=np.array([6.4,2.3]) , gridspec_kw = gridspec_
 ax_flat = ax.flatten()
 for i, h in enumerate(ax_flat):
 
-	if i in assignments['empty']: 
+	if i in assignments['empty']:
 		h.axis('off')
 		continue
-	
+
 	# get participant
 	pid = assignments[str(i)]
 	curr_cond = list(info.loc[info.participant == pid, 'condition'])[0]
@@ -74,12 +74,9 @@ for i, h in enumerate(ax_flat):
 	if i in [18, 19, 20, 21, 23, 24, 25, 26]:
 		h.set_xlabel(xlab, fontsize = 9)
 
-# 18		19		20		21		22		23		24		25		26		
+# 18		19		20		21		22		23		24		25		26
 # CL		ROW		COL 	4C 					CL		ROW		COL 	4C
 
 fig.subplots_adjust(wspace = 0.09, hspace = 0.01)
 fig.savefig('samples.pdf', bbox_inches='tight', transparent=False)
 fig.savefig('samples.png', bbox_inches='tight', transparent=False)
-
-
-

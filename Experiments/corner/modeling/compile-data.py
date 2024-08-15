@@ -7,10 +7,10 @@ import pickle
 execfile('Imports.py')
 from Modules.Classes import Simulation
 
-pd.set_option('display.width', 200, 'precision', 2)
+pd.set_option('display.width', 200, 'display.precision', 2)
 
 
-dbpath = '../data/experiment.db'                           
+dbpath = '../data/experiment.db'
 
 # KEEP:
 keep_tables = [
@@ -33,7 +33,7 @@ mapping = pd.DataFrame(columns = ['condition', 'categories'])
 for i in alphas.columns:
     As = alphas[i].as_matrix().flatten()
     mapping = mapping.append(
-        dict(condition = i, categories =[As]), 
+        dict(condition = i, categories =[As]),
         ignore_index = True
     )
 
@@ -50,7 +50,7 @@ with open('pickles/all_trials.p','wb') as f:
     pickle.dump(trials, f)
 
 # weed out first trials
-trials.Set = [i for i in trials.Set if len(i['categories'][1])>0]
+trials.responses = [i for i in trials.responses if len(i['categories'][1])>0]
 trials._update()
 
 with open('pickles/trials_2-4.p','wb') as f:

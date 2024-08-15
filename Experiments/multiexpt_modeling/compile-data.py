@@ -4,7 +4,7 @@
 import pandas as pd
 import sqlite3
 
-pd.set_option('display.width', 200, 'precision', 2)
+pd.set_option('display.width', 200, 'display.precision', 2)
 
 
 databases = [ '../xor-cluster-row/data/experiment.db',
@@ -28,9 +28,9 @@ for num, dbpath in enumerate(databases):
     with sqlite3.connect(dbpath) as con:
         data = dict((T, pd.read_sql('SELECT * FROM ' + T, con)) for T in keep_tables)
 
-        
+
     # get the stimuli df, init the alphas
-    if num == 0: 
+    if num == 0:
         stimuli = data['stimuli']
         alphas  = data['alphas']
 
@@ -56,7 +56,7 @@ for num, dbpath in enumerate(databases):
             table_idx = T.participant == orig
             new = P.loc[P.original_pid==orig, 'participant']
             T.loc[table_idx, 'participant'] = list(new)[0]
-    
+
 
     # init df or append rows
     if num == 0:
@@ -94,4 +94,3 @@ stimuli.to_sql(       'stimuli',       con, index = False, if_exists = 'replace'
 alphas.to_sql(        'alphas',        con, index = False, if_exists = 'replace')
 betastats.to_sql(     'betastats',     con, index = False, if_exists = 'replace')
 con.close()
-

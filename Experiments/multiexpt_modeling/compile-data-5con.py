@@ -5,7 +5,7 @@
 import pandas as pd
 import sqlite3
 
-pd.set_option('display.width', 200, 'precision', 2)
+pd.set_option('display.width', 200, 'display.precision', 2)
 
 #Do this twice -- once with corner condition both squares and circles,
 # and once with corner condition ONLY squares
@@ -45,7 +45,7 @@ for di,databases in enumerate(databases_Set):
             data = dict((T, pd.read_sql('SELECT * FROM ' + T, con)) for T in keep_tables)
 
         # get the stimuli df, init the alphas
-        if num == 0: 
+        if num == 0:
             stimuli = data['stimuli']
             alphas  = data['alphas']
 
@@ -109,4 +109,3 @@ for di,databases in enumerate(databases_Set):
     alphas.to_sql(        'alphas',        con, index = False, if_exists = 'replace')
     betastats.to_sql(     'betastats',     con, index = False, if_exists = 'replace')
     con.close()
-

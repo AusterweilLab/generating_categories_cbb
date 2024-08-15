@@ -86,7 +86,7 @@ with open(os.path.join(cur_dir,bestparmdb), "rb" ) as f:
 
 #Rebuild it into a smaller dict
 best_params = dict()
-for modelname in best_params_t.keys():    
+for modelname in best_params_t.keys():
     best_params[modelname] = dict()
     for i,parmname in enumerate(best_params_t[modelname]['parmnames']):
         parmval = best_params_t[modelname]['bestparmsll']
@@ -97,7 +97,7 @@ modelList = [Packer,RepresentJK13]
 modelPlotOrder = np.array([[Packer,RepresentJK13],[CopyTweak,ConjugateJK13]])
 #modelPlotOrder = np.array([[CopyTweak,CopyTweakRep],[Packer,RepresentJK13]])
 
-        
+
 unique_trials = 'all'
 trials.task = task
 
@@ -109,7 +109,7 @@ alphas = pd.read_sql_query("SELECT * from alphas", con)
 stimuli = pd.read_sql_query("SELECT * from stimuli", con).values
 con.close()
 
-# create categories mapping                                                                             
+# create categories mapping
 mapping = pd.DataFrame(columns = ['condition', 'categories'])
 for i in alphas.columns:
     As = alphas[i].values.flatten()
@@ -118,7 +118,7 @@ for i in alphas.columns:
         ignore_index = True
     )
 
-# merge categories into generation                                                                      
+# merge categories into generation
 generation = pd.merge(generation, participants, on='participant')
 generation = pd.merge(generation, mapping, on='condition')
 conditions = alphas.columns.values
@@ -127,7 +127,7 @@ def generateOnePerm(condition,generation,stimuli):
     #Generate only the first trial no betas
     genppts = generation.loc[(generation.condition==condition)&(generation.trial==0)]
     genppt = genppts.iloc[0:1]
-    # create trial set object                                                                               
+    # create trial set object
     trials = Simulation.Trialset(stimuli)
     trials = trials.add_frame(genppt)
     trials.task = 'generate'
@@ -153,15 +153,15 @@ for ci,condition in enumerate(conditions):
         if nmodels>1:
             ax[m,0].set_ylabel('{}'.format(model.modelshort),rotation=0,labelpad=lp,fontsize=fs)
             ax[0,ci].set_title('{}'.format(condition),fontsize=fs)
-        else:                    
+        else:
             ax[m].set_ylabel('{}'.format(model.modelshort),rotation=0,labelpad=lp,fontsize=fs)
-        
+
         if model is PackerEuc: #Gotta do this because I haven't fit PackerEuc to all data yet
             params = best_params[Packer.model]
         else:
             params = best_params[model.model]
         #Plot heatmap for each model
-        categories = [trialppt.stimuli[i,:] for i in trialppt.Set[0]['categories'] if len(i)>0]
+        categories = [trialppt.stimuli[i,:] for i in trialppt.responses[0]['categories'] if len(i)>0]
         ps += [model(categories,params,trialppt.stimrange).get_generation_ps(space,1,'generate')]
         #Get lls for each trial step
         ll_trial += [trialppt.loglike(params=params,model=model,parmxform=False,whole_array=True)]
@@ -173,19 +173,19 @@ for ci,condition in enumerate(conditions):
     plotVals = []
     psMax = 0
     psMin = 1
-    #Get range                                                                                                                                     
+    #Get range
     for ps_el in ps:
         psMax = max(psMax,ps_el.max())
         psMin = min(psMin,ps_el.min())
 
-    #Normalise all values                                                                                                                          
+    #Normalise all values
     psRange = psMax-psMin
     for i,ps_el in enumerate(ps): #each ps element correspond to a model
         plotct += 1
         gps = funcs.gradientroll(ps_el,'roll')[:,:,0]
 #         plotVals += [gps]
         ps_ElRange = gps.max()-gps.min();
-        plotVals += [(gps-gps.min())/ps_ElRange]  #Change ps_ElRange to psRange to normalize across all models                                                                           
+        plotVals += [(gps-gps.min())/ps_ElRange]  #Change ps_ElRange to psRange to normalize across all models
         #Adjust Alphas for XOR for clarity of presentation
         if condition=='XOR':
             A = [[-.9,-.9],[-.65,-.65],[.65,.65],[.9,.9]]
