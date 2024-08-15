@@ -14,7 +14,9 @@ def compile_file(filename):
 	with open(filename, encoding='utf-8') as f:
 		return compile(f.read(), filename, 'exec')
 
-cur_dir = 'Experiments/multiexpt_modeling'
+# cur_dir = 'Experiments/multiexpt_modeling'
+cur_dir = ''
+
 
 exec(compile_file(os.path.join(cur_dir,'Imports.py')))
 exec(compile_file(os.path.join(cur_dir,'ImportModels.py')))
@@ -84,7 +86,7 @@ with open(os.path.join(cur_dir,bestparmdb), "rb" ) as f:
 
 #Rebuild it into a smaller dict
 best_params = dict()
-for modelname in best_params_t.keys():    
+for modelname in best_params_t.keys():
     best_params[modelname] = dict()
     for i,parmname in enumerate(best_params_t[modelname]['parmnames']):
         parmval = best_params_t[modelname]['bestparmsll']
@@ -95,7 +97,7 @@ modelList = [Packer,RepresentJK13]
 modelPlotOrder = np.array([[Packer,RepresentJK13],[CopyTweak,ConjugateJK13]])
 #modelPlotOrder = np.array([[CopyTweak,CopyTweakRep],[Packer,RepresentJK13]])
 
-        
+
 unique_trials = 'all'
 trials.task = task
 
@@ -130,7 +132,7 @@ for i,first in enumerate(firsts):
     stepy = np.append(stepy,max(stepy)+step)
     for pi,xx in enumerate(stepx):
         ax[i].grid(False)
-        ax[i].plot([xx,xx],[min(stepy),max(stepy)],'k-')        
+        ax[i].plot([xx,xx],[min(stepy),max(stepy)],'k-')
         ax[i].plot([min(stepx),max(stepx)],[xx,xx],'k-')
         for AsEl in As:
             ax[i].text(AsEl[0],AsEl[1],'A',color='red',
@@ -151,7 +153,7 @@ wraps = [None,1]
 labels = [['a','b'],['c','d']]
 for wi,wrap_ax in enumerate(wraps):
     for mi,model in enumerate(models):
-        #outind = range(steps) + [(e+1)*steps for e in range(steps-2)] + [(e+1)*steps+steps-1 for e in range(steps-2)] + range(steps**2-steps,steps**2)        
+        #outind = range(steps) + [(e+1)*steps for e in range(steps-2)] + [(e+1)*steps+steps-1 for e in range(steps-2)] + range(steps**2-steps,steps**2)
 
         outind = list(range(steps)) + [(e+1)*steps for e in range(steps-2)] + [(e+1)*steps+steps-1 for e in range(steps-2)] + list(range(steps**2-steps,steps**2))
 
@@ -172,7 +174,7 @@ for wi,wrap_ax in enumerate(wraps):
         categories1[0] = [[-.9,-.9],[-.9,.9],[.9,-.9],[.9,.9]]
         funcs.plotgradient(ax[wi,mi], plotVals, categories1[0], [], gammas = gammas,clim = [0,1], cmap = 'Blues',beta_col='green')
         if wi==0:
-            modeln = model.modelshort 
+            modeln = model.modelshort
             if mi==0:
                 ax[wi,mi].set_ylabel('Squares\n\n\n',fontsize=12)
         else:
@@ -182,10 +184,10 @@ for wi,wrap_ax in enumerate(wraps):
             else:
                 ax[wi,mi].set_ylabel('(Toroidal) \n Orientation',fontsize=12)
             ax[wi,mi].set_xlabel('Size\n(Bounded)',fontsize=12)
-        
+
         #titlestr = '%s\nOuter edges: %.2f \nInner spaces: %.2f' % (modeln,outps,innps)
         titlestr = '%s\n\n (%s)'% (modeln,labels[wi][mi])
         ax[wi,mi].set_title(titlestr,fontsize=12)
-        
+
 if saveplots:
     plt.savefig(os.path.join(cur_dir,'firstbetas_cornerPostfits50.pdf'),bbox_inches='tight')

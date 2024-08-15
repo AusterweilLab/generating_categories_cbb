@@ -7,7 +7,9 @@ def compile_file(filename):
 	with open(filename, encoding='utf-8') as f:
 		return compile(f.read(), filename, 'exec')
 
-cur_dir = 'Experiments/multiexpt_modeling'
+# cur_dir = 'Experiments/multiexpt_modeling'
+cur_dir = ''
+
 
 
 exec(compile_file(os.path.join(cur_dir,'Imports.py')))
@@ -43,7 +45,7 @@ f, ax = plt.subplots(1,2, figsize = (5, 2.))
 
 prefix = ['(a)','(b)']
 for i, k in enumerate(['Hierarchical Bayes', 'Representativeness']):
-    m = prob_spaces[k] 
+    m = prob_spaces[k]
     h = ax[i]
 
     ps = m.get_generation_ps(space,1)
@@ -76,4 +78,3 @@ cbar.tick_params(length = 0)
 
 
 f.savefig(os.path.join(cur_dir,'hbm-examples.pdf'), bbox_inches='tight', transparent=True)
-

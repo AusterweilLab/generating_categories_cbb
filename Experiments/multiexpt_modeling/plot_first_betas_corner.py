@@ -15,7 +15,9 @@ def compile_file(filename):
 	with open(filename, encoding='utf-8') as f:
 		return compile(f.read(), filename, 'exec')
 
-cur_dir = 'Experiments/multiexpt_modeling'
+# cur_dir = 'Experiments/multiexpt_modeling'
+cur_dir = ''
+
 
 exec(compile_file(os.path.join(cur_dir,'Imports.py')))
 exec(compile_file(os.path.join(cur_dir,'ImportModels.py')))
@@ -112,8 +114,12 @@ con.close()
 mapping = pd.DataFrame(columns = ['condition', 'categories'])
 for i in alphas.columns:
     As = alphas[i].values.flatten()
-    mapping = mapping.append(
-        dict(condition = i, categories =[As]),
+    # mapping = mapping.append(
+    #     dict(condition = i, categories =[As]),
+    #     ignore_index = True
+    # )
+    mapping = pd.concat(
+        [mapping, pd.DataFrame([dict(condition = i, categories =[As])])],
         ignore_index = True
     )
 

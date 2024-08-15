@@ -10,12 +10,14 @@ def compile_file(filename):
 	with open(filename, encoding='utf-8') as f:
 		return compile(f.read(), filename, 'exec')
 
-cur_dir = 'Experiments/multiexpt_modeling'
+# cur_dir = 'Experiments/multiexpt_modeling'
+cur_dir = ''
+
 
 exec(compile_file(os.path.join(cur_dir,'Imports.py')))
 
 
-#Find all gs fits and print them. Nice nice.        
+#Find all gs fits and print them. Nice nice.
 pickledir = os.path.join(cur_dir,'pickles/')
 prefix = 'chtc_gs_best_params'
 #Compile regexp obj
@@ -38,7 +40,6 @@ for i,file in enumerate(gsfiles):
         print('\tAIC'  + ' = ' + str(fulldata[j]['bestparmsll'][pi+2]) + '\n')
         # for pi,pname in enumerate(fulldata[j]['parmnames']):
         #     print str(fulldata[j]['bestparmsll'][pi])
-            
-        # print  str(fulldata[j]['bestparmsll'][pi+1]) 
-        # print  str(fulldata[j]['bestparmsll'][pi+2]) + '\n'
 
+        # print  str(fulldata[j]['bestparmsll'][pi+1])
+        # print  str(fulldata[j]['bestparmsll'][pi+2]) + '\n'
