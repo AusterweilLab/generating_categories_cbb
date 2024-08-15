@@ -6,10 +6,9 @@ import sqlite3
 
 pd.set_option('display.width', 200, 'display.precision', 2)
 
-
-databases = [ '../xor-cluster-row/data/experiment.db',
-                            '../middle-bottom/data/experiment.db'
-                        ]
+databases = [ '../xor_cluster_row/data/experiment.db',
+              '../middle_bottom/data/experiment.db'
+]
 
 # KEEP:
 keep_tables = [
@@ -40,7 +39,8 @@ for num, dbpath in enumerate(databases):
 
     # update condition mapping
     rows = [ dict(condition=i, experiment=num) for i in data['alphas'].columns ]
-    experiments = experiments.append(rows, ignore_index = True)
+    # experiments = experiments.append(rows, ignore_index = True)
+    experiments = pd.concat([experiments, pd.DataFrame(rows)], ignore_index = True)
 
     # remap participant IDs
     data['participants']['original_pid'] = data['participants'].participant
@@ -79,7 +79,7 @@ original_pids = participants[['participant', 'original_pid', 'experiment']]
 
 # remove irrelevant cols from various dfs
 participants.drop(['start','finish','counterbalance','lab','original_pid'],
-		axis = 1, inplace=True)
+    axis = 1, inplace=True)
 generation.drop(['rt'], axis = 1, inplace=True)
 betastats.drop(['bottom_only','bottom_used','top_and_bottom','top_only','top_used'],
     axis = 1, inplace=True)

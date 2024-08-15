@@ -6,8 +6,9 @@ import os
 def compile_file(filename):
 	with open(filename, encoding='utf-8') as f:
 		return compile(f.read(), filename, 'exec')
-	
-cur_dir = 'Experiments/multiexpt_modeling/'
+
+# cur_dir = 'Experiments/multiexpt_modeling/'
+cur_dir = ''
 exec(compile_file(os.path.join(cur_dir,'Imports.py')))
 
 from Modules.Classes import Packer
@@ -38,7 +39,7 @@ f, ax = plt.subplots(1,3, figsize = (7.5, 2.))
 
 prefix = ['(a)','(b)','(c)']
 for i, k in enumerate(['X','Y','Even']):
-    params['wts'] = wts[k] 
+    params['wts'] = wts[k]
     m = Packer(cats,params)
 
     h = ax[i]
@@ -52,11 +53,11 @@ for i, k in enumerate(['X','Y','Even']):
     title = prefix[i]
     h.set_title(title, fontsize = 11)
 
-    wtstr = '$\{'
+    wtstr = r'$\{'
     wtstr += 'w_1=' + str(wts[k][0])
     wtstr += ', '
     wtstr += 'w_2=' + str(wts[k][1])
-    wtstr += '\}$'
+    wtstr += r'\}$'
     h.set_xlabel(wtstr)
 
 
@@ -69,4 +70,3 @@ cbar.tick_params(length = 0)
 
 
 f.savefig(os.path.join(cur_dir,'packer-attention-examples2.png'), bbox_inches='tight', transparent=False)
-

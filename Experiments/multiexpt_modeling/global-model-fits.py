@@ -13,7 +13,8 @@ def compile_file(filename):
 	with open(filename, encoding='utf-8') as f:
 		return compile(f.read(), filename, 'exec')
 
-cur_dir = 'Experiments/multiexpt_modeling'
+# cur_dir = 'Experiments/multiexpt_modeling'
+cur_dir = ''
 
 exec(compile_file(os.path.join(cur_dir,'Imports.py')))
 
@@ -49,7 +50,7 @@ if __name__ == "__main__":
         if len(sys.argv)<2:
                 dataname = dataname_def
         else:
-                dataname = sys.argv[1]        
+                dataname = sys.argv[1]
 else:
         dataname = dataname_def
         participant = participant_def
@@ -62,6 +63,9 @@ print(f'Fitting Data: ${dataname}')
 # get data from pickle
 with open(os.path.join(os.path.join(cur_dir,pickledir),src),'rb') as f:
     trials = pickle.load( f ,encoding='latin1')
+    if 'Set' in vars(trials).keys():
+        trials.responses = trials.Set
+        del trials.Set
 
 trials.task = task
 
@@ -74,7 +78,7 @@ options = dict(
     method = 'Nelder-Mead',
     options = dict(maxiter = 500, disp = False),
     tol = 0.01,
-) 
+)
 
 results = dict()
 for model_obj in [ConjugateJK13,RepresentJK13,CopyTweak,Packer]:
@@ -83,16 +87,13 @@ for model_obj in [ConjugateJK13,RepresentJK13,CopyTweak,Packer]:
     results[model_obj.model] = X
 
         #Simulation.show_final_p(model_obj,trials,res.x, show_data = False)
-                
+
 
 for k,v in results.items():
     print(k, v)
 
-        
+
 
 # save final result in pickle
 # with open(pickledir+dst,'wb') as f:
 #     pickle.dump(results, f)
-
-
-

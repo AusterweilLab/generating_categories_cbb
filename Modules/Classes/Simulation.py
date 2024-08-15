@@ -475,7 +475,7 @@ class Trialset(object):
             pptTrialObj = extractPptData(self.ppt)
             nresp = 0.0
             nresp_correct = 0.0
-            for trial in pptTrialObj.Set:
+            for trial in pptTrialObj.responses:
                 correctcats = trial['categories']
                 #Iterate over each category
                 for i,correctcat in enumerate(correctcats):
@@ -648,10 +648,10 @@ def _callback_fun_(xk):
         print('\t[' + ', '.join([str(round(i,4)) for i in xk]) + '] f(x) = ' + str(round(fit,4)) )
     elif display == '.':
         if (np.mod(itcount,printcol)!=0) & (itcount>0):
-            print('\b.')
+            print('.', end='')
             sys.stdout.flush()
         elif (itcount>0):
-            print('\b.')
+            print('\b'*printcol+'.', end='')
 
 
                 #print '\t[' + ', '.join([str(round(i,4)) for i in xk]) + ']'
@@ -685,7 +685,7 @@ def show_final_p(model_obj, trial_obj, params, show_data = False):
     #One final presentation of the set of probabilities for each stimulus
     task = trial_obj.task
     nstim = len(trial_obj.stimuli)
-    for idx, trial in enumerate(trial_obj.Set):
+    for idx, trial in enumerate(trial_obj.responses):
         # format categories
         #categories = [trial_obj.stimuli[i,:] for i in trial['categories'] if any(i)]
         categories = [trial_obj.stimuli[i,:] for i in trial['categories'] if len(i)>0]
@@ -778,20 +778,20 @@ def extractPptData(trial_obj, ppt = 'all', unique_trials = 'all'):
             raise Exception(S)
         #Remove all unique trials except the selected one
         if isinstance(idx,list):
-            temp_obj = [chunk for i,chunk in enumerate(trial_obj.Set) if i in idx]
-            output_obj.Set = []
-            output_obj.Set = [chunk for chunk in temp_obj]
+            temp_obj = [chunk for i,chunk in enumerate(trial_obj.responses) if i in idx]
+            output_obj.responses = []
+            output_obj.responses = [chunk for chunk in temp_obj]
         else:
-            temp_obj = trial_obj.Set[idx]
-            output_obj.Set = []
-            output_obj.Set.append(temp_obj)
+            temp_obj = trial_obj.responses[idx]
+            output_obj.responses = []
+            output_obj.responses.append(temp_obj)
     #Check responseType
-    if hasattr(output_obj.Set[0]['response'][0], "__len__"):
+    if hasattr(output_obj.responses[0]['response'][0], "__len__"):
         responseType = 2
     else:
         responseType = 1
 
-    for ti,trialchunk in enumerate(output_obj.Set):
+    for ti,trialchunk in enumerate(output_obj.responses):
         responsecats = trialchunk['response']
         pptcats = trialchunk['participant']
         wrapaxcats = trialchunk['wrap_ax']
@@ -861,31 +861,31 @@ def extractPptData(trial_obj, ppt = 'all', unique_trials = 'all'):
         else:
             raise ValueError('trialset.task not specified. Please specify this as \'generate\' or \'assign\' in your script.')
 
-        output_obj.Set[ti]['response'] = respList
-        output_obj.Set[ti]['participant'] = pptList
-        output_obj.Set[ti]['wrap_ax'] = wrapaxList
+        output_obj.responses[ti]['response'] = respList
+        output_obj.responses[ti]['participant'] = pptList
+        output_obj.responses[ti]['wrap_ax'] = wrapaxList
     #Clean up
     #cleanIdx = np.ones(len(output_obj.Set),dtype=bool)
-    output_objTemp = cp.deepcopy(output_obj.Set)
-    output_obj.Set = []
+    output_objTemp = cp.deepcopy(output_obj.responses)
+    output_obj.responses = []
     for ti,trialchunk in enumerate(output_objTemp):
         if trial_obj.task == 'generate':
             if responseType==1:
                 if len(trialchunk['participant'])>0:
                     #cleanIdx[ti] = False
-                    output_obj.Set.append(trialchunk)
+                    output_obj.responses.append(trialchunk)
             elif responseType==2:
                 size = 0
                 for trialppt in trialchunk['participant']:
                     size += len(trialppt)
                 if size>0:
                     #cleanIdx[ti] = False
-                    output_obj.Set.append(trialchunk)
+                    output_obj.responses.append(trialchunk)
 
         elif trial_obj.task == 'assign' or trial_obj.task == 'error':
             if len(trialchunk['participant'][0])>0:
                 #cleanIdx[ti] = False
-                output_obj.Set.append(trialchunk)
+                output_obj.responses.append(trialchunk)
 
     #Finally, update the unique participant list
     if not ppt=='all':

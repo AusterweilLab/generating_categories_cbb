@@ -13,8 +13,9 @@ from io import open
 def compile_file(filename):
 	with open(filename, encoding='utf-8') as f:
 		return compile(f.read(), filename, 'exec')
-	
-cur_dir = 'Experiments/multiexpt_modeling/'
+
+# cur_dir = 'Experiments/multiexpt_modeling/'
+cur_dir = ''
 exec(compile_file(os.path.join(cur_dir,'Imports.py')))
 
 #execfile('Imports.py')
@@ -25,6 +26,9 @@ from Modules.Classes import Packer, CopyTweak
 # get trials pickle (all data e1_e2 is experiments 1 and d2)
 with open(os.path.join(cur_dir,"pickles/all_data_e1_e2.p"), "rb" ) as f:
     trials = pickle.load( f, encoding='latin1' )
+    if 'Set' in vars(trials).keys():
+         trials.responses = trials.Set
+         del trials.Set
 
 # get best params pickle
 with open(os.path.join(cur_dir,"pickles/chtc_gs_best_params_all_data_e1_e2.p"), "rb" ) as f:
@@ -32,7 +36,7 @@ with open(os.path.join(cur_dir,"pickles/chtc_gs_best_params_all_data_e1_e2.p"), 
 
 #Rebuild it into a smaller dict
 best_params = dict()
-for modelname in best_params_t.keys():    
+for modelname in best_params_t.keys():
     best_params[modelname] = dict()
     for i,parmname in enumerate(best_params_t[modelname]['parmnames']):
         parmval = best_params_t[modelname]['bestparmsll']
